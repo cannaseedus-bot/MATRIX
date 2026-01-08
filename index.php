@@ -5,33 +5,261 @@ require __DIR__ . '/lib/helpers.php';
 use function Matrix\Helpers\e;
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><?php echo e($site_name); ?></title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 960px;
+            margin: 40px auto;
+            padding: 0 16px;
+            color: #1f2328;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .subtitle {
+            color: #57606a;
+            margin-bottom: 24px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            border: 1px solid #d0d7de;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 12px;
+        }
+        button {
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        pre {
+            background: #f6f8fa;
+            padding: 12px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+        }
+        .pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        .pill.ok {
+            background: #dafbe1;
+            color: #1a7f37;
+        }
+        .pill.warn {
+            background: #fff8c5;
+            color: #9a6700;
+        }
+    </style>
 </head>
 <body>
     <header>
         <img src="<?php echo e($logo_url); ?>" alt="<?php echo e($site_name); ?> logo" height="48">
         <h1><?php echo e($site_header); ?></h1>
     </header>
-    <input id="cmd" placeholder="Enter Python command">
-    <button onclick="sendTask()">Send Task</button>
-    <h2>Output</h2>
-    <pre id="output"></pre>
+    <p class="subtitle">Control local Python execution and coordinate tasks via the broker.</p>
+
+    <div class="grid">
+        <section class="card">
+            <h2>Local Python Agent <span id="local-status" class="pill warn">Disconnected</span></h2>
+            <label for="local-url">Local Agent URL</label>
+            <input id="local-url" value="http://127.0.0.1:5001" />
+
+            <label for="local-token">Local Token (optional)</label>
+            <input id="local-token" placeholder="X-LOCAL-TOKEN" />
+
+            <label for="local-command">Run Local Command</label>
+            <textarea id="local-command" rows="3" placeholder="python3 bot.py"></textarea>
+
+            <button id="run-local">Run Locally</button>
+            <h3>Local Output</h3>
+            <pre id="local-output">No local command executed.</pre>
+        </section>
+
+        <section class="card">
+            <h2>Broker Task Submission</h2>
+            <label for="broker-url">Broker URL</label>
+            <input id="broker-url" value="<?php echo e($api_base); ?>" />
+
+            <label for="api-key">API Key (optional)</label>
+            <input id="api-key" placeholder="X-API-KEY" />
+
+            <label for="command">Command</label>
+            <textarea id="command" rows="3" placeholder="Enter a command"></textarea>
+
+            <label for="assigned-agent">Assign to agent (optional)</label>
+            <input id="assigned-agent" placeholder="Agent1" />
+
+            <button id="send">Send Task</button>
+
+            <h3>Broker Response</h3>
+            <pre id="output">No requests yet.</pre>
+        </section>
+
+        <section class="card">
+            <h2>Agents</h2>
+            <button id="refresh-agents">Refresh Agents</button>
+            <pre id="agents-output">No agent data.</pre>
+        </section>
+
+        <section class="card">
+            <h2>Recent Tasks</h2>
+            <label for="tasks-limit">Tasks to show</label>
+            <select id="tasks-limit">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+            </select>
+            <button id="refresh-tasks">Refresh Tasks</button>
+            <pre id="tasks-output">No task data.</pre>
+        </section>
+    </div>
 
 <script>
-const apiBase = <?php echo json_encode($api_base, JSON_THROW_ON_ERROR); ?>;
+const output = document.getElementById("output");
+const send = document.getElementById("send");
+const localOutput = document.getElementById("local-output");
+const runLocal = document.getElementById("run-local");
+const localStatus = document.getElementById("local-status");
+const agentsOutput = document.getElementById("agents-output");
+const tasksOutput = document.getElementById("tasks-output");
 
-async function sendTask() {
-    let cmd = document.getElementById("cmd").value;
-    let res = await fetch(`${apiBase}/add_task.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: cmd })
-    });
-    let data = await res.json();
-    document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+const getBrokerHeaders = () => {
+    const apiKey = document.getElementById("api-key").value;
+    return {
+        "Content-Type": "application/json",
+        ...(apiKey ? { "X-API-KEY": apiKey } : {}),
+    };
+};
+
+const getLocalHeaders = () => {
+    const localToken = document.getElementById("local-token").value;
+    return {
+        "Content-Type": "application/json",
+        ...(localToken ? { "X-LOCAL-TOKEN": localToken } : {}),
+    };
+};
+
+const brokerBase = () =>
+    document.getElementById("broker-url").value.replace(/\/$/, "");
+
+const localBase = () =>
+    document.getElementById("local-url").value.replace(/\/$/, "");
+
+async function refreshLocalStatus() {
+    try {
+        const response = await fetch(`${localBase()}/status`, {
+            headers: getLocalHeaders(),
+        });
+        if (!response.ok) {
+            throw new Error("Local agent not authorized or not running");
+        }
+        const data = await response.json();
+        localStatus.textContent = `Connected: ${data.agent_name}`;
+        localStatus.className = "pill ok";
+    } catch (error) {
+        localStatus.textContent = "Disconnected";
+        localStatus.className = "pill warn";
+    }
 }
+
+runLocal.addEventListener("click", async () => {
+    const command = document.getElementById("local-command").value;
+    if (!command) {
+        localOutput.textContent = "Please enter a local command.";
+        return;
+    }
+
+    try {
+        const response = await fetch(`${localBase()}/run`, {
+            method: "POST",
+            headers: getLocalHeaders(),
+            body: JSON.stringify({ cmd: command }),
+        });
+        const data = await response.json();
+        localOutput.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+        localOutput.textContent = `Request failed: ${error}`;
+    }
+});
+
+send.addEventListener("click", async () => {
+    const command = document.getElementById("command").value;
+    const assignedAgent = document.getElementById("assigned-agent").value;
+
+    if (!command) {
+        output.textContent = "Please enter a command.";
+        return;
+    }
+
+    const payload = { command };
+    if (assignedAgent) {
+        payload.assigned_agent = assignedAgent;
+    }
+
+    try {
+        const response = await fetch(`${brokerBase()}/add_task.php`, {
+            method: "POST",
+            headers: getBrokerHeaders(),
+            body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        output.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+        output.textContent = `Request failed: ${error}`;
+    }
+});
+
+document.getElementById("refresh-agents").addEventListener("click", async () => {
+    try {
+        const response = await fetch(`${brokerBase()}/agents.php`, {
+            headers: getBrokerHeaders(),
+        });
+        const data = await response.json();
+        agentsOutput.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+        agentsOutput.textContent = `Request failed: ${error}`;
+    }
+});
+
+document.getElementById("refresh-tasks").addEventListener("click", async () => {
+    const limit = document.getElementById("tasks-limit").value;
+    try {
+        const response = await fetch(`${brokerBase()}/tasks.php?limit=${limit}`, {
+            headers: getBrokerHeaders(),
+        });
+        const data = await response.json();
+        tasksOutput.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+        tasksOutput.textContent = `Request failed: ${error}`;
+    }
+});
+
+refreshLocalStatus();
 </script>
 </body>
 </html>
