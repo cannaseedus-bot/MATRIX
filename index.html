@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Distributed Task Runner</title>
+</head>
+<body>
+    <h1>Distributed Task Runner</h1>
+    <input id="cmd" placeholder="Enter Python command">
+    <button onclick="sendTask()">Send Task</button>
+    <h2>Output</h2>
+    <pre id="output"></pre>
+
+<script>
+async function sendTask() {
+    let cmd = document.getElementById("cmd").value;
+    let res = await fetch("api/add_task.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: cmd })
+    });
+    let data = await res.json();
+    document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+}
+</script>
+</body>
+</html>
