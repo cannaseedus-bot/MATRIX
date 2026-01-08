@@ -1,9 +1,17 @@
-import requests
+import json
 import time
 import subprocess
+from pathlib import Path
 
-BROKER_URL = "https://YOURDOMAIN.com/api"
-AGENT_NAME = "Agent1"
+import requests
+
+CONFIG_PATH = Path(__file__).with_name("agent_config.json")
+
+with CONFIG_PATH.open("r", encoding="utf-8") as f:
+    config = json.load(f)
+
+BROKER_URL = config["broker_url"]
+AGENT_NAME = config.get("agent_name", "Agent1")
 
 
 def poll_broker():
