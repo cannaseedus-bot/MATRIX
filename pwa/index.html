@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Distributed Task Runner</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 12px;
+    }
+    button {
+      padding: 8px 16px;
+    }
+    pre {
+      background: #f6f8fa;
+      padding: 12px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Distributed Task Runner</h1>
+  <p>Submit tasks to the broker. Results are available via the broker API.</p>
+
+  <label for="broker-url">Broker URL</label>
+  <input id="broker-url" value="https://yourdomain.com/api" />
+
+  <label for="api-key">API Key (optional)</label>
+  <input id="api-key" placeholder="X-API-KEY" />
+
+  <label for="command">Command</label>
+  <textarea id="command" rows="4" placeholder="Enter a command"></textarea>
+
+  <label for="assigned-agent">Assign to agent (optional)</label>
+  <input id="assigned-agent" placeholder="Agent1" />
+
+  <button id="send">Send Task</button>
+
+  <h2>Response</h2>
+  <pre id="output">No requests yet.</pre>
+
+  <script>
+    const output = document.getElementById("output");
+    const send = document.getElementById("send");
+
+    send.addEventListener("click", async () => {
+      const brokerUrl = document.getElementById("broker-url").value.replace(/\/$/, "");
+      const command = document.getElementById("command").value;
+      const assignedAgent = document.getElementById("assigned-agent").value;
+      const apiKey = document.getElementById("api-key").value;
+
+      if (!command) {
+        output.textContent = "Please enter a command.";
+        return;
+      }
+
+      const payload = { command };
+      if (assignedAgent) {
+        payload.assigned_agent = assignedAgent;
+      }
+
+      try {
+        const response = await fetch(`${brokerUrl}/add_task.php`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(apiKey ? { "X-API-KEY": apiKey } : {}),
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        output.textContent = `Request failed: ${error}`;
+      }
+    });
+  </script>
+</body>
+</html>
