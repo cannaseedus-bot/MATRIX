@@ -51,6 +51,9 @@ LISTEN_PORT = int(_config_value("listen_port", "5001"))
 app = Flask(__name__)
 
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
 @app.before_request
 def handle_preflight():
     if request.method == "OPTIONS":
@@ -63,6 +66,12 @@ def add_cors_headers(response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-LOCAL-TOKEN"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
+
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        return ("", 204)
 
 
 def _headers():
