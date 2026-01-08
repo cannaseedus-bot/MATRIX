@@ -7,8 +7,10 @@ CREATE TABLE agents (
 CREATE TABLE tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     command TEXT NOT NULL,
+    command TEXT,
     status ENUM('pending','running','done','error') DEFAULT 'pending',
     result MEDIUMTEXT,
     assigned_agent VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
