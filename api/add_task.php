@@ -1,5 +1,6 @@
 <?php
 header("Content-Type: application/json");
+require 'guard.php';
 require 'db.php';
 require 'auth.php';
 
@@ -12,6 +13,9 @@ if (!isset($data['command'])) {
 }
 
 $assignedAgent = $data['assigned_agent'] ?? null;
+$stmt = $pdo->prepare("INSERT INTO tasks (command, assigned_agent) VALUES (?, ?)");
+$stmt->execute([$data['command'], $assignedAgent]);
+echo json_encode(["status" => "Task added"]);
 $stmt = $pdo->prepare("INSERT INTO tasks (command, assigned_agent, status) VALUES (?, ?, 'pending')");
 $stmt->execute([$data['command'], $assignedAgent]);
 echo json_encode(["status" => "Task added", "task_id" => $pdo->lastInsertId()]);

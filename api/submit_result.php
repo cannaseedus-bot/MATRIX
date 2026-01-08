@@ -1,5 +1,6 @@
 <?php
 header("Content-Type: application/json");
+require 'guard.php';
 require 'db.php';
 require 'auth.php';
 
@@ -16,6 +17,9 @@ if (!in_array($status, ['done', 'error'], true)) {
     $status = 'done';
 }
 
+$stmt = $pdo->prepare("UPDATE tasks SET status=?, result=? WHERE id=?");
+$stmt->execute([$status, $data['result'], $data['task_id']]);
+echo json_encode(["status" => "Result stored"]);
 $stmt = $pdo->prepare("UPDATE tasks SET status=?, result=?, updated_at=NOW() WHERE id=?");
 $stmt->execute([$status, $data['result'], $data['task_id']]);
 echo json_encode(["status" => "Result stored", "task_id" => $data['task_id']]);

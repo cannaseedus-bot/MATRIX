@@ -6,6 +6,7 @@ CREATE TABLE agents (
 
 CREATE TABLE tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    command TEXT NOT NULL,
     command TEXT,
     status ENUM('pending','running','done','error') DEFAULT 'pending',
     result MEDIUMTEXT,

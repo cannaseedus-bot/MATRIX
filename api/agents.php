@@ -1,5 +1,6 @@
 <?php
 header("Content-Type: application/json");
+require 'guard.php';
 require 'db.php';
 require 'auth.php';
 

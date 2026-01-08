@@ -1,5 +1,6 @@
 <?php
 header("Content-Type: application/json");
+require 'guard.php';
 require 'db.php';
 require 'auth.php';
 
@@ -15,6 +16,11 @@ if (!$agent) {
 $stmt = $pdo->prepare("INSERT INTO agents (name, last_seen) VALUES (?, NOW()) ON DUPLICATE KEY UPDATE last_seen = NOW()");
 $stmt->execute([$agent]);
 
+// Fetch pending task for agent (or unassigned)
+$stmt = $pdo->prepare(
+    "SELECT * FROM tasks WHERE status='pending' AND (assigned_agent IS NULL OR assigned_agent = ?) ORDER BY id ASC LIMIT 1"
+);
+$stmt->execute([$agent]);
 // Fetch pending task
 $stmt = $pdo->prepare(
     "SELECT * FROM tasks

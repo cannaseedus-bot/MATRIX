@@ -12,6 +12,7 @@ $db_pass = "YOUR_DB_PASS";
 $api_key = "";
 
 $api_base = $domain . "/api";
+$api_key = "";
 
 $google_oauth_client_id = "YOUR_GOOGLE_CLIENT_ID";
 $google_oauth_client_secret = "YOUR_GOOGLE_CLIENT_SECRET";
