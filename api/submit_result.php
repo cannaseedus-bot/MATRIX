@@ -1,19 +1,14 @@
 <?php
-require __DIR__ . '/db.php';
-require_api_key();
+header("Content-Type: application/json");
+require 'db.php';
 
-$payload = json_decode(file_get_contents('php://input'), true);
-$taskId = $payload['task_id'] ?? null;
-$result = $payload['result'] ?? null;
-$status = $payload['status'] ?? 'done';
-
-if (!$taskId) {
-    http_response_code(400);
-    echo json_encode(["error" => "Missing task_id"]);
+$data = json_decode(file_get_contents("php://input"), true);
+if (!isset($data['task_id']) || !isset($data['result'])) {
+    echo json_encode(["error" => "Missing task_id or result"]);
     exit;
 }
 
-$stmt = $pdo->prepare("UPDATE tasks SET status = ?, result = ? WHERE id = ?");
-$stmt->execute([$status, $result, $taskId]);
-
+$stmt = $pdo->prepare("UPDATE tasks SET status='done', result=? WHERE id=?");
+$stmt->execute([$data['result'], $data['task_id']]);
 echo json_encode(["status" => "Result stored"]);
+?>
