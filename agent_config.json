@@ -1,4 +1,5 @@
 {
   "broker_url": "https://YOURDOMAIN.com/api",
-  "agent_name": "Agent1"
+  "agent_name": "Agent1",
+  "api_key": ""
 }
