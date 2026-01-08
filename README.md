@@ -1,4 +1,4 @@
-# MATRIX - RUNTIME GUI CLI PHP MATH ENGINE
+# MATRIX Language Pack for npm
 
 ## Install (hash-linked)
 - [#php-broker-api](#php-broker-api)
