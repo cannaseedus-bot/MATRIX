@@ -9,8 +9,8 @@ CREATE TABLE tasks (
     command TEXT NOT NULL,
     status ENUM('pending','running','done','error') DEFAULT 'pending',
     result MEDIUMTEXT,
-    assigned_agent INT,
+    assigned_agent VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (assigned_agent) REFERENCES agents(id)
+    INDEX (assigned_agent)
 );
