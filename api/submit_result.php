@@ -2,6 +2,9 @@
 header("Content-Type: application/json");
 require 'guard.php';
 require 'db.php';
+require 'auth.php';
+
+require_api_key();
 
 $data = json_decode(file_get_contents("php://input"), true);
 if (!isset($data['task_id']) || !isset($data['result'])) {
@@ -17,4 +20,7 @@ if (!in_array($status, ['done', 'error'], true)) {
 $stmt = $pdo->prepare("UPDATE tasks SET status=?, result=? WHERE id=?");
 $stmt->execute([$status, $data['result'], $data['task_id']]);
 echo json_encode(["status" => "Result stored"]);
+$stmt = $pdo->prepare("UPDATE tasks SET status=?, result=?, updated_at=NOW() WHERE id=?");
+$stmt->execute([$status, $data['result'], $data['task_id']]);
+echo json_encode(["status" => "Result stored", "task_id" => $data['task_id']]);
 ?>
