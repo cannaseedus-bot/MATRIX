@@ -1,15 +1,18 @@
 <?php
 require __DIR__ . '/config.php';
+require __DIR__ . '/lib/helpers.php';
+
+use function Matrix\Helpers\e;
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?php echo htmlspecialchars($site_name, ENT_QUOTES, 'UTF-8'); ?></title>
+    <title><?php echo e($site_name); ?></title>
 </head>
 <body>
     <header>
-        <img src="<?php echo htmlspecialchars($logo_url, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($site_name, ENT_QUOTES, 'UTF-8'); ?> logo" height="48">
-        <h1><?php echo htmlspecialchars($site_header, ENT_QUOTES, 'UTF-8'); ?></h1>
+        <img src="<?php echo e($logo_url); ?>" alt="<?php echo e($site_name); ?> logo" height="48">
+        <h1><?php echo e($site_header); ?></h1>
     </header>
     <input id="cmd" placeholder="Enter Python command">
     <button onclick="sendTask()">Send Task</button>
