@@ -13,8 +13,23 @@ LOCAL_TOKEN = os.getenv("LOCAL_TOKEN")
 POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "5"))
 COMMAND_TIMEOUT = int(os.getenv("COMMAND_TIMEOUT", "60"))
 AGENT_HOST = os.getenv("AGENT_HOST", "127.0.0.1")
+LOCAL_ORIGIN = os.getenv("LOCAL_ORIGIN", "*")
 
 app = Flask(__name__)
+
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = LOCAL_ORIGIN
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-LOCAL-TOKEN"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
 
 
 def _headers():
