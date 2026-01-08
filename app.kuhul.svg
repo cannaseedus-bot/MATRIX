@@ -1,0 +1,15 @@
+<!-- save as `app.kuhul.svg` -->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <kuhul:data>
+    {
+      "type": "app",
+      "components": [
+        { "type": "button", "text": "Run", "action": "log('Hello from KUHUL!')" }
+      ]
+    }
+  </kuhul:data>
+  <script>
+    // Temporary: Use JS to bootstrap KUHUL (replace with pure KUHUL later)
+    KUHUL.execute(document.querySelector('kuhul\\:data').textContent);
+  </script>
+</svg>
