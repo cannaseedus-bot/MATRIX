@@ -1,19 +1,27 @@
+<?php
+require __DIR__ . '/config.php';
+?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Distributed Task Runner</title>
+    <title><?php echo htmlspecialchars($site_name, ENT_QUOTES, 'UTF-8'); ?></title>
 </head>
 <body>
-    <h1>Distributed Task Runner</h1>
+    <header>
+        <img src="<?php echo htmlspecialchars($logo_url, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($site_name, ENT_QUOTES, 'UTF-8'); ?> logo" height="48">
+        <h1><?php echo htmlspecialchars($site_header, ENT_QUOTES, 'UTF-8'); ?></h1>
+    </header>
     <input id="cmd" placeholder="Enter Python command">
     <button onclick="sendTask()">Send Task</button>
     <h2>Output</h2>
     <pre id="output"></pre>
 
 <script>
+const apiBase = <?php echo json_encode($api_base, JSON_THROW_ON_ERROR); ?>;
+
 async function sendTask() {
     let cmd = document.getElementById("cmd").value;
-    let res = await fetch("api/add_task.php", {
+    let res = await fetch(`${apiBase}/add_task.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ command: cmd })
