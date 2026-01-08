@@ -1,0 +1,15 @@
+{
+  "name": "Matrix Mesh Starter Kit",
+  "short_name": "Matrix Mesh",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "../app.kuhul.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

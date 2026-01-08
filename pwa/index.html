@@ -3,13 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Distributed Task Runner</title>
+  <title>Matrix Mesh Starter Kit</title>
+  <link rel="manifest" href="manifest.json" />
   <style>
     body {
-      font-family: sans-serif;
-      max-width: 720px;
-      margin: 40px auto;
-      padding: 0 16px;
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 20px 60px;
+      color: #111827;
+      background: #f9fafb;
+    }
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+      margin-bottom: 20px;
     }
     label {
       display: block;
@@ -20,9 +36,20 @@
       width: 100%;
       padding: 8px;
       margin-bottom: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
     }
     button {
-      padding: 8px 16px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #0f172a;
     }
     pre {
       background: #f6f8fa;
@@ -30,41 +57,133 @@
       border-radius: 6px;
       white-space: pre-wrap;
     }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Distributed Task Runner</h1>
-  <p>Submit tasks to the broker. Results are available via the broker API.</p>
+  <header>
+    <h1>Matrix Mesh Starter Kit</h1>
+    <p class="muted">Connect your PWA to a local Python agent and a shared PHP broker to coordinate distributed tasks.</p>
+  </header>
 
-  <label for="broker-url">Broker URL</label>
-  <input id="broker-url" value="https://yourdomain.com/api" />
+  <div class="card">
+    <h2>Broker Settings</h2>
+    <label for="broker-url">Broker URL</label>
+    <input id="broker-url" value="https://yourdomain.com/api" />
 
-  <label for="api-key">API Key (optional)</label>
-  <input id="api-key" placeholder="X-API-KEY" />
+    <label for="api-key">API Key (optional)</label>
+    <input id="api-key" placeholder="X-API-KEY" />
+  </div>
 
-  <label for="command">Command</label>
-  <textarea id="command" rows="4" placeholder="Enter a command"></textarea>
+  <div class="card grid">
+    <div>
+      <h2>Local Agent</h2>
+      <label for="agent-url">Agent URL</label>
+      <input id="agent-url" value="http://127.0.0.1:5001" />
 
-  <label for="assigned-agent">Assign to agent (optional)</label>
-  <input id="assigned-agent" placeholder="Agent1" />
+      <label for="local-token">Local Token (optional)</label>
+      <input id="local-token" placeholder="X-LOCAL-TOKEN" />
 
-  <button id="send">Send Task</button>
+      <button id="check-agent" class="secondary">Check Agent Status</button>
+    </div>
+    <div>
+      <h2>Local Run</h2>
+      <label for="local-command">Command</label>
+      <textarea id="local-command" rows="4" placeholder="python3 bot.py"></textarea>
+      <button id="run-local">Run Locally</button>
+    </div>
+  </div>
 
-  <h2>Response</h2>
-  <pre id="output">No requests yet.</pre>
+  <div class="card grid">
+    <div>
+      <h2>Broker Task</h2>
+      <label for="command">Command</label>
+      <textarea id="command" rows="4" placeholder="Enter a command"></textarea>
+
+      <label for="assigned-agent">Assign to agent (optional)</label>
+      <input id="assigned-agent" placeholder="Agent1" />
+
+      <button id="send">Send Task</button>
+    </div>
+    <div>
+      <h2>Broker Insights</h2>
+      <button id="load-agents" class="secondary">Refresh Agents</button>
+      <button id="load-tasks" class="secondary">Refresh Tasks</button>
+      <pre id="broker-output">No broker data yet.</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Local Output</h2>
+    <pre id="local-output">No local requests yet.</pre>
+  </div>
 
   <script>
-    const output = document.getElementById("output");
-    const send = document.getElementById("send");
+    const brokerOutput = document.getElementById("broker-output");
+    const localOutput = document.getElementById("local-output");
 
-    send.addEventListener("click", async () => {
+    const getHeaders = (apiKey) => ({
+      "Content-Type": "application/json",
+      ...(apiKey ? { "X-API-KEY": apiKey } : {}),
+    });
+
+    const getLocalHeaders = (token) => ({
+      "Content-Type": "application/json",
+      ...(token ? { "X-LOCAL-TOKEN": token } : {}),
+    });
+
+    document.getElementById("check-agent").addEventListener("click", async () => {
+      const agentUrl = document.getElementById("agent-url").value.replace(/\/$/, "");
+      const token = document.getElementById("local-token").value;
+      try {
+        const response = await fetch(`${agentUrl}/status`, {
+          headers: getLocalHeaders(token),
+        });
+        const data = await response.json();
+        localOutput.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        localOutput.textContent = `Agent check failed: ${error}`;
+      }
+    });
+
+    document.getElementById("run-local").addEventListener("click", async () => {
+      const agentUrl = document.getElementById("agent-url").value.replace(/\/$/, "");
+      const token = document.getElementById("local-token").value;
+      const command = document.getElementById("local-command").value;
+      if (!command) {
+        localOutput.textContent = "Please enter a command.";
+        return;
+      }
+
+      try {
+        const response = await fetch(`${agentUrl}/run`, {
+          method: "POST",
+          headers: getLocalHeaders(token),
+          body: JSON.stringify({ cmd: command }),
+        });
+        const data = await response.json();
+        localOutput.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        localOutput.textContent = `Local run failed: ${error}`;
+      }
+    });
+
+    document.getElementById("send").addEventListener("click", async () => {
       const brokerUrl = document.getElementById("broker-url").value.replace(/\/$/, "");
       const command = document.getElementById("command").value;
       const assignedAgent = document.getElementById("assigned-agent").value;
       const apiKey = document.getElementById("api-key").value;
 
       if (!command) {
-        output.textContent = "Please enter a command.";
+        brokerOutput.textContent = "Please enter a command.";
         return;
       }
 
@@ -76,18 +195,49 @@
       try {
         const response = await fetch(`${brokerUrl}/add_task.php`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(apiKey ? { "X-API-KEY": apiKey } : {}),
-          },
+          headers: getHeaders(apiKey),
           body: JSON.stringify(payload),
         });
         const data = await response.json();
-        output.textContent = JSON.stringify(data, null, 2);
+        brokerOutput.textContent = JSON.stringify(data, null, 2);
       } catch (error) {
-        output.textContent = `Request failed: ${error}`;
+        brokerOutput.textContent = `Request failed: ${error}`;
       }
     });
+
+    document.getElementById("load-agents").addEventListener("click", async () => {
+      const brokerUrl = document.getElementById("broker-url").value.replace(/\/$/, "");
+      const apiKey = document.getElementById("api-key").value;
+      try {
+        const response = await fetch(`${brokerUrl}/agents.php`, {
+          headers: getHeaders(apiKey),
+        });
+        const data = await response.json();
+        brokerOutput.textContent = JSON.stringify({ agents: data }, null, 2);
+      } catch (error) {
+        brokerOutput.textContent = `Agent load failed: ${error}`;
+      }
+    });
+
+    document.getElementById("load-tasks").addEventListener("click", async () => {
+      const brokerUrl = document.getElementById("broker-url").value.replace(/\/$/, "");
+      const apiKey = document.getElementById("api-key").value;
+      try {
+        const response = await fetch(`${brokerUrl}/tasks.php?limit=20`, {
+          headers: getHeaders(apiKey),
+        });
+        const data = await response.json();
+        brokerOutput.textContent = JSON.stringify({ tasks: data }, null, 2);
+      } catch (error) {
+        brokerOutput.textContent = `Task load failed: ${error}`;
+      }
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js");
+      });
+    }
   </script>
 </body>
 </html>
