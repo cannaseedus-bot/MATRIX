@@ -139,6 +139,44 @@
       <label for="command">Command</label>
       <textarea id="command" rows="3" placeholder="Enter a command"></textarea>
 
+      <label for="assigned-agent">Assign to agent (optional)</label>
+      <input id="assigned-agent" placeholder="Agent1" />
+
+      <button id="send">Send Task</button>
+
+      <h3>Broker Response</h3>
+      <pre id="output">No requests yet.</pre>
+    </section>
+
+
+  <div class="grid">
+    <section class="card">
+      <h2>Local Python Agent <span id="local-status" class="pill warn">Disconnected</span></h2>
+      <label for="local-url">Local Agent URL</label>
+      <input id="local-url" value="http://127.0.0.1:5001" />
+
+      <label for="local-token">Local Token (optional)</label>
+      <input id="local-token" placeholder="X-LOCAL-TOKEN" />
+
+      <label for="local-command">Run Local Command</label>
+      <textarea id="local-command" rows="3" placeholder="python3 bot.py"></textarea>
+
+      <button id="run-local">Run Locally</button>
+      <h3>Local Output</h3>
+      <pre id="local-output">No local command executed.</pre>
+    </section>
+
+    <section class="card">
+      <h2>Broker Task Submission</h2>
+      <label for="broker-url">Broker URL</label>
+      <input id="broker-url" value="https://yourdomain.com/api" />
+
+      <label for="api-key">API Key (optional)</label>
+      <input id="api-key" placeholder="X-API-KEY" />
+
+      <label for="command">Command</label>
+      <textarea id="command" rows="3" placeholder="Enter a command"></textarea>
+
 
   <div class="grid">
     <section class="card">
@@ -427,6 +465,33 @@
       }
     });
 
+    document.getElementById("refresh-agents").addEventListener("click", async () => {
+      try {
+        const response = await fetch(`${brokerBase()}/agents.php`, {
+          headers: getBrokerHeaders(),
+        });
+        const data = await response.json();
+        agentsOutput.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        agentsOutput.textContent = `Request failed: ${error}`;
+      }
+    });
+
+    document.getElementById("refresh-tasks").addEventListener("click", async () => {
+      const limit = document.getElementById("tasks-limit").value;
+      try {
+        const response = await fetch(`${brokerBase()}/tasks.php?limit=${limit}`, {
+          headers: getBrokerHeaders(),
+        });
+        const data = await response.json();
+        tasksOutput.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        tasksOutput.textContent = `Request failed: ${error}`;
+      }
+    });
+
+    refreshLocalStatus();
+    refreshLocalStatus();
     document.getElementById("refresh-agents").addEventListener("click", async () => {
       try {
         const response = await fetch(`${brokerBase()}/agents.php`, {
