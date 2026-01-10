@@ -23,6 +23,8 @@
    - `AGENT_NAME` (e.g. `Agent1`)
    - `API_KEY` (optional, if `$api_key` is set in `config.php`)
    - `LOCAL_TOKEN` (optional, for local PWA access)
+3. Run the agent: `python agent/agent.py`.
+4. Open the PWA and connect to `http://127.0.0.1:5001` with the matching local token if set (the agent enables CORS for browser access).
    - `LOCAL_ORIGIN` (optional, CORS origin for the local agent; default `*`)
 3. Run the agent: `python agent/agent.py`.
 4. Open the PWA and connect to `http://127.0.0.1:5001` with the matching local token if set.

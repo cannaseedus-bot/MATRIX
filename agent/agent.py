@@ -51,6 +51,17 @@ LISTEN_PORT = int(_config_value("listen_port", "5001"))
 app = Flask(__name__)
 
 
+def _corsify(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-LOCAL-TOKEN"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        return _corsify(app.response_class())
 @app.after_request
 def add_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -140,6 +151,9 @@ def run_local_command(cmd: str) -> tuple[str, str]:
     return output, ""
 
 
+@app.route("/run", methods=["POST", "OPTIONS"])
+def run_command():
+    if not _authorized():
 @app.after_request
 def add_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -180,6 +194,7 @@ def run_command():
     return jsonify({"output": output})
 
 
+@app.route("/status", methods=["GET", "OPTIONS"])
 @app.route("/status", methods=["GET"])
 def status():
     if not _authorized():
@@ -191,6 +206,11 @@ def status():
             "poll_interval": POLL_INTERVAL,
         }
     )
+
+
+@app.after_request
+def apply_cors(response):
+    return _corsify(response)
 
 
 def poll_broker():

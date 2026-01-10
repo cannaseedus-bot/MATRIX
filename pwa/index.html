@@ -465,6 +465,32 @@
       }
     });
 
+    document.getElementById("refresh-agents").addEventListener("click", async () => {
+      try {
+        const response = await fetch(`${brokerBase()}/agents.php`, {
+          headers: getBrokerHeaders(),
+        });
+        const data = await response.json();
+        agentsOutput.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        agentsOutput.textContent = `Request failed: ${error}`;
+      }
+    });
+
+    document.getElementById("refresh-tasks").addEventListener("click", async () => {
+      const limit = document.getElementById("tasks-limit").value;
+      try {
+        const response = await fetch(`${brokerBase()}/tasks.php?limit=${limit}`, {
+          headers: getBrokerHeaders(),
+        });
+        const data = await response.json();
+        tasksOutput.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        tasksOutput.textContent = `Request failed: ${error}`;
+      }
+    });
+
+    refreshLocalStatus();
     refreshLocalStatus();
     document.getElementById("refresh-agents").addEventListener("click", async () => {
       try {
