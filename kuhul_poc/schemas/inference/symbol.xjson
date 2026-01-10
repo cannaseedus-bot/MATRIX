@@ -1,0 +1,126 @@
+{
+  "@context": "xjson://inference/symbol/v1",
+  "@id": "xjson://schema/inference/symbol.xjson/v1",
+  "@schema": "xjson://schema/core/v1",
+  "@type": "schema",
+  "n": "symbol.xjson",
+  "d": "Symbol Vector Schema: canonical intermediate between token stream and matrix construction.",
+  "v": "1.0.0",
+  "required": [
+    "meta",
+    "mode",
+    "vars",
+    "constants",
+    "facts",
+    "ops",
+    "constraints",
+    "targets",
+    "evidence"
+  ],
+  "meta": {
+    "required": ["trace_id", "ts", "source"],
+    "trace_id": "string",
+    "ts": "timestamp",
+    "source": {
+      "required": ["model", "tokenizer", "input_kind"],
+      "model": "string",
+      "tokenizer": "string",
+      "input_kind": "string",
+      "lang": "string?"
+    }
+  },
+  "mode": {
+    "required": ["domain", "subtype", "phase"],
+    "domain": "enum(arithmetic, algebra, rate, system, geometry, game, app)",
+    "subtype": "string",
+    "phase": "enum(GAME_BUILD, GAME_SIMULATE, GAME_RENDER, SOLVE)"
+  },
+  "vars": {
+    "type": "array",
+    "items": {
+      "required": ["id", "role", "dtype"],
+      "id": "string",
+      "role": "enum(unknown, intermediate, parameter)",
+      "dtype": "enum(scalar, vector, matrix)",
+      "unit": "string?",
+      "tags": "string[]?"
+    }
+  },
+  "constants": {
+    "type": "array",
+    "items": {
+      "required": ["id", "value", "dtype"],
+      "id": "string",
+      "value": "number",
+      "dtype": "enum(scalar)",
+      "unit": "string?"
+    }
+  },
+  "facts": {
+    "type": "array",
+    "items": {
+      "required": ["kind", "lhs", "op", "rhs"],
+      "kind": "enum(equation, inequality, assignment, relation)",
+      "lhs": "term",
+      "op": "enum(=, >, <, >=, <=)",
+      "rhs": "term",
+      "confidence": "float?",
+      "span": "span?"
+    }
+  },
+  "ops": {
+    "type": "array",
+    "items": {
+      "required": ["kind", "out", "args"],
+      "kind": "enum(add, sub, mul, div, pow, neg)",
+      "out": "term_ref",
+      "args": "term_ref[]",
+      "confidence": "float?",
+      "span": "span?"
+    }
+  },
+  "constraints": {
+    "type": "array",
+    "items": {
+      "required": ["kind", "expr"],
+      "kind": "enum(domain, unit, range, integer, nonnegative)",
+      "expr": "string",
+      "confidence": "float?"
+    }
+  },
+  "targets": {
+    "required": ["unknowns", "objective"],
+    "unknowns": "string[]",
+    "objective": "enum(solve, simplify, optimize, verify)"
+  },
+  "evidence": {
+    "required": ["tokens", "entities"],
+    "tokens": "string[]",
+    "entities": {
+      "type": "array",
+      "items": {
+        "required": ["kind", "text", "value"],
+        "kind": "enum(number, unit, actor, object, rate, time, distance, money, percent)",
+        "text": "string",
+        "value": "string|number|object",
+        "span": "span?"
+      }
+    },
+    "notes": "string[]?"
+  },
+  "defs": {
+    "span": {
+      "required": ["start", "end"],
+      "start": "int",
+      "end": "int"
+    },
+    "term_ref": "string",
+    "term": {
+      "required": ["kind"],
+      "kind": "enum(ref, const, expr)",
+      "ref": "string?",
+      "const": "number?",
+      "expr": "string?"
+    }
+  }
+}

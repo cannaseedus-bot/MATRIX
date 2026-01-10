@@ -1,0 +1,78 @@
+{
+  "@context": "xjson://inference/lowering/rules/v1",
+  "@type": "ruleset",
+  "v": "1.0.0",
+  "n": "lowering.rules.xjson",
+  "d": "Deterministic NL->Symbol lowering using token/entity evidence (Qwen tokenizer front-end).",
+  "lex": {
+    "ops": {
+      "add": ["add", "plus", "sum", "total", "together", "combined", "more"],
+      "sub": ["subtract", "minus", "difference", "less", "fewer", "take", "remove"],
+      "mul": ["multiply", "times", "product", "each", "per", "rate", "of"],
+      "div": ["divide", "quotient", "split", "share", "ratio", "per"],
+      "eq": ["equals", "is", "was", "will", "results", "yields", "gives"]
+    },
+    "unknown": ["unknown", "variable", "what", "how", "find"],
+    "domains": {
+      "rate": ["speed", "rate", "per", "mph", "km/h", "average"],
+      "money": ["dollar", "cost", "price", "money", "$"],
+      "percent": ["percent", "percentage", "%"],
+      "system": ["two", "both", "numbers", "sum", "difference"]
+    }
+  },
+  "rules": [
+    {
+      "id": "R0_domain_detect",
+      "when": "contains_any(tokens, lex.domains.rate)",
+      "emit": { "mode.domain": "rate", "mode.subtype": "d=rt" }
+    },
+    {
+      "id": "R0b_system_detect",
+      "when": "contains_any(tokens, lex.domains.system) and count_numbers(entities)>=2 and contains_any(tokens,['sum','difference'])",
+      "emit": { "mode.domain": "system", "mode.subtype": "lin2" }
+    },
+    {
+      "id": "R1_extract_numbers_as_constants",
+      "when": "true",
+      "emit": "for_each_number_entity_add_constant"
+    },
+    {
+      "id": "R2_unknown_detect",
+      "when": "contains_any(tokens, lex.unknown)",
+      "emit": {
+        "vars+= [{id:'x', role:'unknown', dtype:'scalar'}]",
+        "targets.unknowns+= ['x']"
+      }
+    },
+    {
+      "id": "R3_rate_pattern_d_t",
+      "when": "mode.domain=='rate' and has_entity(entities,'distance') and has_entity(entities,'time')",
+      "emit": {
+        "vars+= [{id:'s', role:'unknown', dtype:'scalar', unit:'distance/time'}]",
+        "targets.unknowns= ['s']",
+        "facts+= [{kind:'equation', lhs:{kind:'ref',ref:'d'}, op:'=', rhs:{kind:'expr',expr:'s*t'}}]"
+      }
+    },
+    {
+      "id": "R4_simple_addition_template",
+      "when": "mode.domain=='arithmetic' and contains_any(tokens, lex.ops.add) and count_numbers(entities)>=2",
+      "emit": {
+        "facts+= [{kind:'equation', lhs:{kind:'expr',expr:'c0 + c1'}, op:'=', rhs:{kind:'ref',ref:'x'}}]",
+        "targets.unknowns= ['x']"
+      }
+    },
+    {
+      "id": "R5_simple_division_template",
+      "when": "mode.domain=='arithmetic' and contains_any(tokens, lex.ops.div) and count_numbers(entities)>=2",
+      "emit": {
+        "facts+= [{kind:'equation', lhs:{kind:'expr',expr:'c0 / c1'}, op:'=', rhs:{kind:'ref',ref:'x'}}]",
+        "targets.unknowns= ['x']"
+      }
+    }
+  ],
+  "determinism": {
+    "ordering": "rules execute in listed order",
+    "tie_break": "first-match wins for domain; facts append in rule order",
+    "naming": "constants are c0,c1,c2 in order of appearance; unknown defaults to x"
+  }
+}

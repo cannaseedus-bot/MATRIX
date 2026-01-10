@@ -1,0 +1,49 @@
+{
+  "@context": "xjson://inference/explain/rules/v1",
+  "@type": "ruleset",
+  "v": "1.0.0",
+  "rules": [
+    {
+      "id": "E_rate_template",
+      "when": "symbol.mode.domain=='rate'",
+      "template": {
+        "steps": [
+          "We are given the total distance {{d}} and total time {{t}}.",
+          "Average speed is calculated as distance divided by time.",
+          "So we compute {{d}} ÷ {{t}}."
+        ],
+        "final": "The average speed is {{s}} {{unit}}."
+      }
+    },
+    {
+      "id": "E_arithmetic_add",
+      "when": "symbol.ops contains 'add'",
+      "template": {
+        "steps": [
+          "We start with {{c0}}.",
+          "We add {{c1}}.",
+          "This gives a total of {{x}}."
+        ],
+        "final": "The answer is {{x}}."
+      }
+    },
+    {
+      "id": "E_system_linear",
+      "when": "symbol.mode.domain=='system'",
+      "template": {
+        "steps": [
+          "We represent the equations as a system of linear equations.",
+          "We convert them into matrix form.",
+          "We solve the system using elimination."
+        ],
+        "final": "The solution is {{x}} = {{x_val}}, {{y}} = {{y_val}}."
+      }
+    }
+  ],
+  "binding": {
+    "{{d}}": "symbol.constants[d].value",
+    "{{t}}": "symbol.constants[t].value",
+    "{{s}}": "solution.values.s",
+    "{{x}}": "solution.values.x"
+  }
+}

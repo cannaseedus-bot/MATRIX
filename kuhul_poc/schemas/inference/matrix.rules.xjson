@@ -1,0 +1,42 @@
+{
+  "@context": "xjson://inference/matrix/rules/v1",
+  "@type": "ruleset",
+  "v": "1.0.0",
+  "n": "matrix.rules.xjson",
+  "d": "Symbol->Matrix lowering rules per domain.",
+  "rules": [
+    {
+      "id": "M_rate_linear",
+      "when": "symbol.mode.domain=='rate' and has_const('d') and has_const('t') and has_var('s')",
+      "emit": {
+        "matrix.kind": "Ax=b",
+        "matrix.A": [["t"]],
+        "matrix.x": ["s"],
+        "matrix.b": ["d"]
+      }
+    },
+    {
+      "id": "M_system_lin2",
+      "when": "symbol.mode.domain=='system' and has_two_equations_lin2(symbol.facts)",
+      "emit": {
+        "matrix.kind": "Ax=b",
+        "matrix.A": "from_normalized_coeffs",
+        "matrix.x": ["x", "y"],
+        "matrix.b": "from_constants"
+      }
+    },
+    {
+      "id": "M_arithmetic_scalar",
+      "when": "symbol.mode.domain=='arithmetic' and can_eval_scalar(symbol.facts)",
+      "emit": {
+        "matrix.kind": "scalar",
+        "matrix.eval": "eval_scalar_expression"
+      }
+    }
+  ],
+  "determinism": {
+    "equation_normalize": "move all to LHS, collect coefficients in var order, constants to RHS",
+    "var_order": "targets.unknowns order; fallback lexical",
+    "float_policy": "use float64; round for display only"
+  }
+}
