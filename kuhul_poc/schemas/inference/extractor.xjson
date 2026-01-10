@@ -1,0 +1,41 @@
+{
+  "@context": "xjson://inference/extractor/v1",
+  "@type": "contract",
+  "v": "1.0.0",
+  "n": "SymbolExtractor",
+  "input": {
+    "tokens": "string[]",
+    "entities": [
+      {
+        "kind": "enum(number, unit, rate, time, distance, money, percent)",
+        "text": "string",
+        "value": "number|string",
+        "span": { "start": "int", "end": "int" }
+      }
+    ],
+    "metadata": {
+      "model": "string",
+      "tokenizer": "string",
+      "lang": "string"
+    }
+  },
+  "output": {
+    "$ref": "xjson://schema/inference/symbol.xjson/v1"
+  },
+  "phases": [
+    "detect_domain",
+    "register_constants",
+    "register_variables",
+    "emit_facts",
+    "emit_ops",
+    "emit_targets",
+    "finalize"
+  ],
+  "invariants": {
+    "deterministic": true,
+    "order_preserving": true,
+    "no_inference": true,
+    "no_evaluation": true,
+    "symbols_only": true
+  }
+}

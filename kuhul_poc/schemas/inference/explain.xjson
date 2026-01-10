@@ -1,0 +1,38 @@
+{
+  "@context": "xjson://inference/explain/v1",
+  "@type": "explanation",
+  "trace_id": "string",
+  "inputs": {
+    "problem": "string",
+    "domain": "string",
+    "unknowns": "string[]"
+  },
+  "projection": {
+    "symbol_view": {
+      "vars": "string[]",
+      "constants": "object",
+      "facts": "string[]"
+    },
+    "matrix_view": {
+      "form": "enum(scalar, Ax=b)",
+      "A": "number[][]?",
+      "b": "number[]?",
+      "steps": "string[]"
+    },
+    "solution_view": {
+      "values": "object",
+      "verified": "boolean"
+    }
+  },
+  "language": {
+    "template_id": "string",
+    "steps": "string[]",
+    "final_answer": "string",
+    "units": "string?"
+  },
+  "constraints": {
+    "no_new_symbols": true,
+    "no_new_operations": true,
+    "trace_complete": true
+  }
+}
