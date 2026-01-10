@@ -4,6 +4,7 @@
 - [#php-broker-api](#php-broker-api)
 - [#pwa-frontend](#pwa-frontend)
 - [#python-agent](#python-agent)
+- [Inference Plains: MATRIX Math Word Problem Server](docs/inference-plains.md)
 
 ### PHP Broker API
 1. Upload the `api/` folder and `config.php` to your hosting root.
