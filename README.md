@@ -1,3 +1,5 @@
+<img src=logo.svg>
+
 # MATRIX Language Pack for npm
 
 ## Install (hash-linked)
