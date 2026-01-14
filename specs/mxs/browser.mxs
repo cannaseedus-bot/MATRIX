@@ -1,0 +1,115 @@
+/* ===========================
+ * Environment: browser
+ * =========================== */
+
+@env (device = "browser") {
+
+  /* Backends: prefer WebGPU, then WebGL, never CUDA/ROCm/MPS */
+
+  backend[webgpu] {
+    priority: 1;
+    enabled: true;
+
+    max-batch-size: 4;
+    max-seq-length: 2048;
+
+    shader-fusion: true;
+    buffer-reuse: true;
+    transfer-queue: true;
+  }
+
+  backend[webgl] {
+    priority: 2;
+    enabled: true;
+
+    max-batch-size: 2;
+    max-seq-length: 1024;
+
+    texture-compute: true;
+    limited-precision: true;
+  }
+
+  backend[cuda],
+  backend[rocm],
+  backend[mps] {
+    enabled: false;
+  }
+
+  backend[cpu] {
+    priority: 3;
+    enabled: true;
+
+    threads: "auto";
+    thread-affinity: "balanced";
+  }
+
+  /* Inference pipeline: keep heavy ops on GPU, light ops on CPU */
+
+  pipeline[name="qwen2.5-7b-instruct"] {
+    max-tokens: 1024;
+    temperature: 0.7;
+    top-p: 0.9;
+  }
+
+  pipeline[name="qwen2.5-7b-instruct"] step[tokenize] {
+    runtime: cpu;
+    threads: "auto";
+  }
+
+  pipeline[name="qwen2.5-7b-instruct"] step[embed] {
+    runtime: gpu;
+    backend-preference: "webgpu, webgl, cpu";
+  }
+
+  pipeline[name="qwen2.5-7b-instruct"] step[blocks] {
+    runtime: gpu;
+    backend-preference: "webgpu, webgl, cpu";
+  }
+
+  pipeline[name="qwen2.5-7b-instruct"] step[sample] {
+    runtime: cpu;
+  }
+
+  pipeline[name="qwen2.5-7b-instruct"] step[decode] {
+    runtime: cpu;
+  }
+
+  /* Execution graph tuning */
+
+  node[operation="attention"] {
+    impl: "flash_attention_v2";
+    backend: "webgpu";
+  }
+
+  node[operation="gelu_matmul"] {
+    backend: "webgpu";
+  }
+
+  node[operation="categorical_sample"] {
+    backend: "cpu";
+  }
+
+  /* Mesh compute: conservative browser cluster behavior */
+
+  node[type="browser.node"] {
+    min-memory-gb: 2;
+    min-cores: 2;
+
+    max-concurrent-tasks: 1;
+    preferred-role: "light-blocks";
+  }
+
+  node[type="browser.node"][capability~="webgpu"] {
+    preferred-role: "attention, mlp";
+  }
+
+  node[type="browser.node"][capability~="webgl"] {
+    preferred-role: "fallback-compute";
+  }
+
+  coordinator {
+    strategy: "model-parallel";
+    micro-batches: 2;
+    gradient-accumulation: 4;
+  }
+}

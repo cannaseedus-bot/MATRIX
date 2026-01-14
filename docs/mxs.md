@@ -10,6 +10,15 @@ MXS is a CSS-like declarative layer for MATRIX `@@gpu.execution` specs. It **doe
 
 MXS never defines *what* exists, only *how it should behave* under conditions.
 
+## MATRIX language context
+
+MATRIX is a language that can be expressed in multiple forms, including JavaScript, JSON objects, and XCFE/AST-like PHP. MXS is intentionally **representation-agnostic**: it targets the **logical** `@@gpu.execution` structure regardless of whether the spec is stored as text, parsed into an AST, or serialized to JSON/YAML for transport or tooling.
+
+## Example stylesheets
+
+- Browser policy: `specs/mxs/browser.mxs`
+- Server policy: `specs/mxs/server.mxs`
+
 ---
 
 ## Selector model
