@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emerald Ghost Atomic CSS Demo</title>
+  <link rel="stylesheet" href="emerald_ghost_atomic.css">
+  <style>
+    /* Demo-specific layout */
+    .demo-section {
+      margin-bottom: var(--⟁s8);
+      padding: var(--⟁s6);
+    }
+    .demo-section h2 {
+      margin-bottom: var(--⟁s4);
+      padding-bottom: var(--⟁s2);
+      border-bottom: 1px solid var(--⟁stroke-soft);
+    }
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--⟁s4);
+    }
+    .code-block {
+      background: var(--⟁bg-void);
+      padding: var(--⟁s3);
+      border-radius: var(--⟁r2);
+      font-family: monospace;
+      font-size: var(--⟁fs-xs);
+      overflow-x: auto;
+      border: 1px solid var(--⟁stroke-soft);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header ⟁flex ⟁between ⟁px6 ⟁py4 ⟁glass ⟁border-b style="position: sticky; top: 0; z-index: var(--⟁z-sticky);">
+    <div ⟁flex ⟁acenter ⟁g3>
+      <div class="⟁glow-dot"></div>
+      <span ⟁text-xl ⟁font-bold ⟁text-emerald>EMERALD GHOST</span>
+      <span class="⟁badge">v1.0</span>
+    </div>
+    <nav ⟁flex ⟁g4>
+      <a href="#colors" ⟁text-secondary style="text-decoration: none;">Colors</a>
+      <a href="#components" ⟁text-secondary style="text-decoration: none;">Components</a>
+      <a href="#utilities" ⟁text-secondary style="text-decoration: none;">Utilities</a>
+      <a href="#xcfe" ⟁text-secondary style="text-decoration: none;">XCFE</a>
+    </nav>
+  </header>
+
+  <main ⟁px6 ⟁py8 style="max-width: 1400px; margin: 0 auto;">
+
+    <!-- Hero Section -->
+    <section ⟁text-center ⟁py9>
+      <h1 ⟁text-5xl ⟁font-black ⟁tracking-tight style="background: linear-gradient(135deg, var(--⟁emerald-pure), var(--⟁cyan-pure)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        Emerald Ghost Atomic CSS
+      </h1>
+      <p ⟁text-xl ⟁text-secondary ⟁my4 style="max-width: 600px; margin-left: auto; margin-right: auto;">
+        Glass morphic design system with CM-1 control annotations and XCFE state classes
+      </p>
+      <div ⟁flex ⟁jcenter ⟁g3 ⟁my6>
+        <button class="⟁btn ⟁btn-primary">Get Started</button>
+        <button class="⟁btn">Documentation</button>
+      </div>
+    </section>
+
+    <!-- Colors Section -->
+    <section id="colors" class="demo-section">
+      <h2 ⟁text-2xl ⟁font-bold ⟁text-primary>Color Palette</h2>
+
+      <div class="demo-grid">
+        <!-- Background Colors -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Backgrounds</h3>
+          <div ⟁flex ⟁col ⟁g2>
+            <div ⟁flex ⟁acenter ⟁g3>
+              <div ⟁bg-void ⟁rounded style="width: 40px; height: 40px; border: 1px solid var(--⟁stroke-soft);"></div>
+              <span ⟁text-sm>--⟁bg-void</span>
+            </div>
+            <div ⟁flex ⟁acenter ⟁g3>
+              <div ⟁bg-primary ⟁rounded style="width: 40px; height: 40px; border: 1px solid var(--⟁stroke-soft);"></div>
+              <span ⟁text-sm>--⟁bg-primary</span>
+            </div>
+            <div ⟁flex ⟁acenter ⟁g3>
+              <div ⟁bg-secondary ⟁rounded style="width: 40px; height: 40px; border: 1px solid var(--⟁stroke-soft);"></div>
+              <span ⟁text-sm>--⟁bg-secondary</span>
+            </div>
+            <div ⟁flex ⟁acenter ⟁g3>
+              <div ⟁bg-tertiary ⟁rounded style="width: 40px; height: 40px; border: 1px solid var(--⟁stroke-soft);"></div>
+              <span ⟁text-sm>--⟁bg-tertiary</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accent Colors -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Accents</h3>
+          <div ⟁flex ⟁col ⟁g2>
+            <div ⟁flex ⟁acenter ⟁g3>
+              <div ⟁bg-emerald ⟁rounded ⟁glow-emerald style="width: 40px; height: 40px;"></div>
+              <span ⟁text-sm>--⟁emerald-pure</span>
+            </div>
+            <div ⟁flex ⟁acenter ⟁g3>
+              <div ⟁bg-cyan ⟁rounded ⟁glow-cyan style="width: 40px; height: 40px;"></div>
+              <span ⟁text-sm>--⟁cyan-pure</span>
+            </div>
+            <div ⟁flex ⟁acenter ⟁g3>
+              <div ⟁glass ⟁rounded style="width: 40px; height: 40px;"></div>
+              <span ⟁text-sm>--⟁glass-medium</span>
+            </div>
+            <div ⟁flex ⟁acenter ⟁g3>
+              <div ⟁glass-strong ⟁rounded style="width: 40px; height: 40px;"></div>
+              <span ⟁text-sm>--⟁glass-strong</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text Colors -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Typography</h3>
+          <div ⟁flex ⟁col ⟁g2>
+            <span ⟁text-primary ⟁font-medium>Primary Text</span>
+            <span ⟁text-secondary>Secondary Text</span>
+            <span ⟁text-tertiary>Tertiary Text</span>
+            <span ⟁text-muted>Muted Text</span>
+            <span ⟁text-emerald ⟁font-semibold>Emerald Accent</span>
+            <span ⟁text-cyan ⟁font-semibold>Cyan Accent</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Components Section -->
+    <section id="components" class="demo-section">
+      <h2 ⟁text-2xl ⟁font-bold ⟁text-primary>Components</h2>
+
+      <div class="demo-grid">
+        <!-- Panels -->
+        <div class="⟁panel">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb2>Panel Component</h3>
+          <p ⟁text-secondary ⟁text-sm ⟁mb4>Glass morphic panel with hover glow effect.</p>
+          <div class="code-block">
+            &lt;div class="⟁panel"&gt;...&lt;/div&gt;
+          </div>
+        </div>
+
+        <!-- Cards -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb2>Card Component</h3>
+          <p ⟁text-secondary ⟁text-sm ⟁mb4>Elevated card with radial gradient on hover.</p>
+          <div class="code-block">
+            &lt;div class="⟁card"&gt;...&lt;/div&gt;
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Buttons</h3>
+          <div ⟁flex ⟁wrap ⟁g3 ⟁mb4>
+            <button class="⟁btn">Default</button>
+            <button class="⟁btn ⟁btn-primary">Primary</button>
+            <button class="⟁btn" disabled>Disabled</button>
+          </div>
+          <div class="code-block">
+            &lt;button class="⟁btn"&gt;...&lt;/button&gt;
+            &lt;button class="⟁btn ⟁btn-primary"&gt;...&lt;/button&gt;
+          </div>
+        </div>
+
+        <!-- Chips & Badges -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Chips & Badges</h3>
+          <div ⟁flex ⟁wrap ⟁g3 ⟁mb4>
+            <span class="⟁chip">Chip Label</span>
+            <span class="⟁chip">Another Chip</span>
+            <span class="⟁badge">BADGE</span>
+            <span class="⟁badge">NEW</span>
+          </div>
+          <div class="code-block">
+            &lt;span class="⟁chip"&gt;...&lt;/span&gt;
+            &lt;span class="⟁badge"&gt;...&lt;/span&gt;
+          </div>
+        </div>
+
+        <!-- Inputs -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Form Inputs</h3>
+          <div ⟁flex ⟁col ⟁g3 ⟁mb4>
+            <input class="⟁input" type="text" placeholder="Text input...">
+            <input class="⟁input" type="email" placeholder="Email input...">
+          </div>
+          <div class="code-block">
+            &lt;input class="⟁input" type="text"&gt;
+          </div>
+        </div>
+
+        <!-- Dividers & Dots -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Indicators</h3>
+          <div ⟁flex ⟁acenter ⟁g4 ⟁mb4>
+            <div class="⟁glow-dot"></div>
+            <span ⟁text-sm>Glow Dot (animated)</span>
+          </div>
+          <div class="⟁divider"></div>
+          <p ⟁text-sm ⟁text-tertiary ⟁mt4>Gradient divider above</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Utilities Section -->
+    <section id="utilities" class="demo-section">
+      <h2 ⟁text-2xl ⟁font-bold ⟁text-primary>Atomic Utilities</h2>
+
+      <div class="demo-grid">
+        <!-- Layout -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Layout</h3>
+          <div class="code-block" ⟁mb3>
+            [⟁flex] [⟁grid] [⟁block] [⟁hidden]
+            [⟁row] [⟁col] [⟁wrap]
+            [⟁jcenter] [⟁jbetween] [⟁jevenly]
+            [⟁acenter] [⟁astart] [⟁aend]
+            [⟁center] [⟁between]
+          </div>
+          <div ⟁flex ⟁jbetween ⟁acenter ⟁p3 ⟁glass ⟁rounded>
+            <span>Left</span>
+            <span>Center</span>
+            <span>Right</span>
+          </div>
+        </div>
+
+        <!-- Spacing -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Spacing</h3>
+          <div class="code-block" ⟁mb3>
+            [⟁p0-8] [⟁px1-6] [⟁py1-6]
+            [⟁m0-6] [⟁mx-auto] [⟁my1-4]
+            [⟁g1-6]
+          </div>
+          <div ⟁flex ⟁g2>
+            <div ⟁p2 ⟁glass ⟁rounded ⟁text-xs>p2</div>
+            <div ⟁p3 ⟁glass ⟁rounded ⟁text-xs>p3</div>
+            <div ⟁p4 ⟁glass ⟁rounded ⟁text-xs>p4</div>
+          </div>
+        </div>
+
+        <!-- Typography -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Typography</h3>
+          <div class="code-block" ⟁mb3>
+            [⟁text-xs] to [⟁text-5xl]
+            [⟁font-normal/medium/semibold/bold/black]
+            [⟁tracking-tight/normal/wide/wider/widest]
+          </div>
+          <div ⟁flex ⟁col ⟁g1>
+            <span ⟁text-xs>text-xs (10px)</span>
+            <span ⟁text-sm>text-sm (11px)</span>
+            <span ⟁text-base>text-base (14px)</span>
+            <span ⟁text-lg>text-lg (16px)</span>
+            <span ⟁text-xl>text-xl (18px)</span>
+          </div>
+        </div>
+
+        <!-- Effects -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Effects</h3>
+          <div class="code-block" ⟁mb3>
+            [⟁shadow-sm/md/lg/xl]
+            [⟁glow-emerald] [⟁glow-cyan]
+            [⟁glass] [⟁glass-soft] [⟁glass-strong]
+            [⟁rounded-sm/md/lg/xl/full]
+          </div>
+          <div ⟁flex ⟁g3>
+            <div ⟁p3 ⟁glass ⟁rounded ⟁shadow-sm ⟁text-xs>shadow-sm</div>
+            <div ⟁p3 ⟁glass ⟁rounded ⟁shadow ⟁text-xs>shadow</div>
+            <div ⟁p3 ⟁glass ⟁rounded ⟁glow-emerald ⟁text-xs>glow</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- XCFE Section -->
+    <section id="xcfe" class="demo-section">
+      <h2 ⟁text-2xl ⟁font-bold ⟁text-primary>XCFE Control Classes</h2>
+      <p ⟁text-secondary ⟁mb6>CSS classes mapped to XCFE control flow and CM-1 phase markers.</p>
+
+      <div class="demo-grid">
+        <!-- Control Flow -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Control Flow</h3>
+          <div ⟁flex ⟁col ⟁g3>
+            <div class="xcfe-if ⟁p3 ⟁glass ⟁rounded">
+              <span ⟁text-sm ⟁text-emerald>.xcfe-if</span> — Condition active
+            </div>
+            <div class="xcfe-then ⟁p3 ⟁glass ⟁rounded">
+              <span ⟁text-sm ⟁text-emerald>.xcfe-then</span> — Then block
+            </div>
+            <div class="xcfe-loop ⟁p3 ⟁glass ⟁rounded">
+              <span ⟁text-sm ⟁text-emerald>.xcfe-loop</span> — Loop pulse
+            </div>
+          </div>
+        </div>
+
+        <!-- Cognitive Controls -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>Cognitive Controls</h3>
+          <div ⟁flex ⟁col ⟁g3>
+            <div class="xcfe-perception ⟁p3 ⟁glass ⟁rounded">
+              <span ⟁text-sm ⟁text-cyan>.xcfe-perception</span> — Left border
+            </div>
+            <div class="xcfe-representation ⟁p3 ⟁rounded">
+              <span ⟁text-sm ⟁text-cyan>.xcfe-representation</span> — Emerald bg
+            </div>
+            <div class="xcfe-reasoning ⟁p3 ⟁glass ⟁rounded">
+              <span ⟁text-sm ⟁text-cyan>.xcfe-reasoning</span> — Dashed border
+            </div>
+            <div class="xcfe-decision ⟁p3 ⟁glass ⟁rounded">
+              <span ⟁text-sm ⟁text-cyan>.xcfe-decision</span> — Glow effect
+            </div>
+          </div>
+        </div>
+
+        <!-- CM-1 Markers -->
+        <div class="⟁card">
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb4>CM-1 Phase Markers</h3>
+          <div class="code-block">
+.cm1-header     /* U+0001 SOH - Header phase */
+.cm1-body       /* U+0002 STX - Body phase */
+.cm1-body-end   /* U+0003 ETX - Body end */
+.cm1-flush      /* U+0004 EOT - Transmission end */
+.cm1-scope-push /* U+000E SO  - Scope push */
+.cm1-scope-pop  /* U+000F SI  - Scope pop */
+          </div>
+          <p ⟁text-xs ⟁text-tertiary ⟁mt3>
+            CM-1 classes are non-rendering by design (projection invariant).
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Animation Section -->
+    <section class="demo-section">
+      <h2 ⟁text-2xl ⟁font-bold ⟁text-primary>Animations</h2>
+
+      <div class="demo-grid">
+        <div class="⟁card" ⟁animate-fade-in>
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb2>Fade In Up</h3>
+          <p ⟁text-sm ⟁text-secondary>[⟁animate-fade-in]</p>
+        </div>
+
+        <div class="⟁card" ⟁animate-float>
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb2>Float</h3>
+          <p ⟁text-sm ⟁text-secondary>[⟁animate-float]</p>
+        </div>
+
+        <div class="⟁card" ⟁relative ⟁overflow-hidden ⟁animate-shimmer>
+          <h3 ⟁text-lg ⟁font-semibold ⟁mb2>Shimmer</h3>
+          <p ⟁text-sm ⟁text-secondary>[⟁animate-shimmer]</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer ⟁text-center ⟁py6 ⟁border-t ⟁text-tertiary ⟁text-sm>
+    <p>Emerald Ghost Atomic CSS &middot; CM-1 Annotated &middot; XCFE Bound</p>
+    <p ⟁mt2 ⟁text-muted>ASX = XCFE = XJSON = KUHUL = AST = CM-1</p>
+  </footer>
+
+</body>
+</html>
