@@ -75,6 +75,35 @@ curl -X POST http://127.0.0.1:5001/ollama \
 | Ollama        | `ollama`                     | API   | (none - local)        |
 | Ollama Cloud  | (hosted)                     | API   | `OLLAMA_API_KEY`      |
 
+## Ollama Cloud Models
+
+### Frontier / Ultra-Large (Cloud-Only)
+
+| Model                      | Size   | Description                    |
+|----------------------------|--------|--------------------------------|
+| `deepseek-v3.1:671b-cloud` | 671B   | Frontier model                 |
+| `gpt-oss:120b-cloud`       | 120B   | Open-source GPT-OSS variant    |
+| `kimi-k2:1t-cloud`         | 1T     | Trillion-parameter model       |
+| `qwen3-coder:480b-cloud`   | 480B   | Code-specialized              |
+| `qwen3-vl:235b-cloud`      | 235B   | Vision-language model          |
+
+### Large General-Purpose
+
+| Model                    | Description                              |
+|--------------------------|------------------------------------------|
+| `glm-4.6:cloud`          | High-end GLM series                      |
+| `glm-4.7`                | Coding-optimized GLM                     |
+| `minimax-m2.1`           | Multilingual, code + reasoning           |
+| `gemini-3-flash-preview` | Fast, low-cost frontier                  |
+
+### Agentic / Tool-Using
+
+| Model             | Size | Description                         |
+|-------------------|------|-------------------------------------|
+| `nemotron-3-nano` | 30B  | Tool-use capabilities               |
+| `devstral-small-2`| 24B  | Codebase exploration, multi-file    |
+| `rnj-1`           | 8B   | STEM + code optimized               |
+
 ## Project Structure
 
 ```
