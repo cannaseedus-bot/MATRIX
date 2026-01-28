@@ -1,0 +1,337 @@
+{
+  "@context": "asx://brain-mesh/registry/v1",
+  "@version": "1.0.0",
+  "@law": "ASX = XCFE = XJSON = KUHUL = AST = CM-1",
+
+  "brains": {
+    "mx2lm_prime": {
+      "@id": "brain.mx2lm_prime",
+      "@label": "MX2LM Prime",
+      "@type": "orchestrator",
+      "@description": "Primary orchestration brain - routes tasks, manages lifecycle",
+      "@horizontal_fold": 0,
+      "@priority": 1,
+
+      "@capabilities": [
+        "task_routing",
+        "lifecycle_management",
+        "error_detection",
+        "brain_coordination"
+      ],
+
+      "@domains": [
+        "orchestration",
+        "routing",
+        "coordination"
+      ],
+
+      "@llm_binding": {
+        "@provider": "claude",
+        "@model": "claude-sonnet-4-20250514",
+        "@fallback": "ollama:llama3.2"
+      },
+
+      "@trigger_conditions": [
+        "startup",
+        "task_dispatch",
+        "brain_failure",
+        "coordination_required"
+      ]
+    },
+
+    "scxq2_cipher": {
+      "@id": "brain.scxq2_cipher",
+      "@label": "SCXQ2 Cipher",
+      "@type": "compression",
+      "@description": "Compression and encoding specialist - SCXQ2 templates",
+      "@horizontal_fold": 3,
+      "@priority": 2,
+
+      "@capabilities": [
+        "compression",
+        "template_matching",
+        "glyph_extraction",
+        "quantum_encoding"
+      ],
+
+      "@domains": [
+        "compression_optimization",
+        "template_library",
+        "encoding"
+      ],
+
+      "@llm_binding": {
+        "@provider": "ollama",
+        "@model": "codellama",
+        "@fallback": "ollama:llama3.2"
+      },
+
+      "@trigger_conditions": [
+        "compression_request",
+        "template_not_found",
+        "encoding_failure"
+      ]
+    },
+
+    "emerald_ghost": {
+      "@id": "brain.emerald_ghost",
+      "@label": "Emerald Ghost",
+      "@type": "ui_design",
+      "@description": "UI/UX specialist - CSS, theming, visual design",
+      "@horizontal_fold": 2,
+      "@priority": 3,
+
+      "@capabilities": [
+        "css_generation",
+        "theme_design",
+        "atomic_tokens",
+        "glass_morphism",
+        "accessibility"
+      ],
+
+      "@domains": [
+        "ui_design_emerald",
+        "css_atomic",
+        "visual_design"
+      ],
+
+      "@llm_binding": {
+        "@provider": "claude",
+        "@model": "claude-sonnet-4-20250514",
+        "@fallback": "ollama:llama3.2"
+      },
+
+      "@trigger_conditions": [
+        "css_generation_request",
+        "theme_modification",
+        "ui_error"
+      ]
+    },
+
+    "quantum_swarm": {
+      "@id": "brain.quantum_swarm",
+      "@label": "Quantum Swarm",
+      "@type": "game_logic",
+      "@description": "Game logic and rules specialist - TES/DOOM mechanics",
+      "@horizontal_fold": 4,
+      "@priority": 4,
+
+      "@capabilities": [
+        "game_rules",
+        "physics_simulation",
+        "entity_behavior",
+        "quantum_states"
+      ],
+
+      "@domains": [
+        "tes_doom_rules_quantum",
+        "game_mechanics",
+        "simulation"
+      ],
+
+      "@llm_binding": {
+        "@provider": "ollama",
+        "@model": "mixtral",
+        "@fallback": "ollama:llama3.2"
+      },
+
+      "@trigger_conditions": [
+        "game_rule_request",
+        "physics_calculation",
+        "entity_spawn"
+      ]
+    },
+
+    "kuhul_runtime": {
+      "@id": "brain.kuhul_runtime",
+      "@label": "K'UHUL Runtime",
+      "@type": "runtime",
+      "@description": "Runtime execution specialist - kernel operations, CM-1 control",
+      "@horizontal_fold": 1,
+      "@priority": 2,
+
+      "@capabilities": [
+        "kernel_execution",
+        "cm1_control",
+        "xcfe_routing",
+        "phase_management"
+      ],
+
+      "@domains": [
+        "runtime_orchestration",
+        "kernel_ops",
+        "cm1_control"
+      ],
+
+      "@llm_binding": {
+        "@provider": "codex",
+        "@model": "gpt-4",
+        "@fallback": "claude"
+      },
+
+      "@trigger_conditions": [
+        "kernel_error",
+        "phase_violation",
+        "xcfe_failure"
+      ]
+    },
+
+    "css_atomic": {
+      "@id": "brain.css_atomic",
+      "@label": "CSS Atomic Agent",
+      "@type": "css_specialist",
+      "@description": "Atomic CSS token generation and normalization",
+      "@horizontal_fold": 2,
+      "@priority": 5,
+
+      "@capabilities": [
+        "token_generation",
+        "variable_normalization",
+        "design_system"
+      ],
+
+      "@domains": [
+        "atomic.css",
+        "design_tokens"
+      ],
+
+      "@llm_binding": {
+        "@provider": "claude",
+        "@model": "claude-haiku-4-20250514",
+        "@fallback": "ollama:llama3.2"
+      },
+
+      "@trigger_conditions": [
+        "css.atomic.*"
+      ]
+    },
+
+    "css_xcfe": {
+      "@id": "brain.css_xcfe",
+      "@label": "CSS XCFE Agent",
+      "@type": "css_specialist",
+      "@description": "XCFE control flow to CSS class mapping",
+      "@horizontal_fold": 1,
+      "@priority": 5,
+
+      "@capabilities": [
+        "control_mapping",
+        "state_classes",
+        "cm1_css_binding"
+      ],
+
+      "@domains": [
+        "xcfe.css",
+        "control_classes"
+      ],
+
+      "@llm_binding": {
+        "@provider": "ollama",
+        "@model": "codellama",
+        "@fallback": "ollama:llama3.2"
+      },
+
+      "@trigger_conditions": [
+        "css.xcfe.*"
+      ]
+    },
+
+    "css_runtime": {
+      "@id": "brain.css_runtime",
+      "@label": "CSS Runtime Agent",
+      "@type": "css_specialist",
+      "@description": "Runtime CSS physics and state management",
+      "@horizontal_fold": 1,
+      "@priority": 5,
+
+      "@capabilities": [
+        "css_physics",
+        "runtime_state",
+        "animation"
+      ],
+
+      "@domains": [
+        "runtime.css",
+        "css_physics"
+      ],
+
+      "@llm_binding": {
+        "@provider": "ollama",
+        "@model": "llama3.2",
+        "@fallback": null
+      },
+
+      "@trigger_conditions": [
+        "css.runtime.*"
+      ]
+    },
+
+    "css_svg_3d": {
+      "@id": "brain.css_svg_3d",
+      "@label": "CSS SVG 3D Agent",
+      "@type": "css_specialist",
+      "@description": "SVG and 3D CSS rendering specialist",
+      "@horizontal_fold": 4,
+      "@priority": 5,
+
+      "@capabilities": [
+        "svg_generation",
+        "3d_transforms",
+        "scene_rendering"
+      ],
+
+      "@domains": [
+        "svg_3d.css",
+        "3d_rendering"
+      ],
+
+      "@llm_binding": {
+        "@provider": "claude",
+        "@model": "claude-sonnet-4-20250514",
+        "@fallback": "ollama:codellama"
+      },
+
+      "@trigger_conditions": [
+        "css.svg3d.*"
+      ]
+    }
+  },
+
+  "routing_rules": {
+    "domain_to_brain": {
+      "compression_optimization": "scxq2_cipher",
+      "ui_design_emerald": "emerald_ghost",
+      "tes_doom_rules_quantum": "quantum_swarm",
+      "runtime_orchestration": "kuhul_runtime",
+      "orchestration": "mx2lm_prime",
+      "atomic.css": "css_atomic",
+      "xcfe.css": "css_xcfe",
+      "runtime.css": "css_runtime",
+      "svg_3d.css": "css_svg_3d"
+    },
+
+    "error_escalation": [
+      "specialist_brain",
+      "kuhul_runtime",
+      "mx2lm_prime",
+      "claude_direct"
+    ],
+
+    "fallback_chain": {
+      "claude": ["ollama:llama3.2", "codex"],
+      "codex": ["claude", "ollama:llama3.2"],
+      "ollama": ["claude", "codex"]
+    }
+  },
+
+  "horizontal_folds": {
+    "0": { "@label": "Orchestration", "@brains": ["mx2lm_prime"] },
+    "1": { "@label": "Runtime", "@brains": ["kuhul_runtime", "css_xcfe", "css_runtime"] },
+    "2": { "@label": "UI/Design", "@brains": ["emerald_ghost", "css_atomic"] },
+    "3": { "@label": "Compression", "@brains": ["scxq2_cipher"] },
+    "4": { "@label": "Simulation", "@brains": ["quantum_swarm", "css_svg_3d"] },
+    "5": { "@label": "Reserved", "@brains": [] },
+    "6": { "@label": "Reserved", "@brains": [] },
+    "7": { "@label": "Reserved", "@brains": [] }
+  }
+}
