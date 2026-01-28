@@ -4,12 +4,12 @@
   "api_key": "",
   "local_api_token": "",
   "poll_interval": 5,
-  "command_timeout": 60,
-  "allow_shell": false,
-  "allowed_commands": [
-    "python",
-    "python3"
-  ],
-  "listen_host": "0.0.0.0",
-  "listen_port": 5001
+  "command_timeout": 300,
+  "listen_host": "127.0.0.1",
+  "listen_port": 5001,
+  "local_origin": "*",
+
+  "ai_agent": "claude",
+  "ai_agent_path": "",
+  "working_dir": ""
 }
