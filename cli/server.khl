@@ -1,0 +1,65 @@
+⟁runtime⟁ mx2lm.server.v1 {
+
+  Wo server = {
+    host: "127.0.0.1",
+    port: 4141,
+    protocol: "http+ws",
+    mode: "static+status+ws"
+  }
+
+  Wo state = {
+    uptime: 0,
+    requests: 0,
+    healthy: true,
+    last_tick_ms: 0
+  }
+
+  Sek boot -> bind -> serve -> tick
+
+  ⟁endpoint⟁ GET "/" {
+    return {
+      service: "MX2LM Server Runtime",
+      version: "1.1.0",
+      ws: "/ws/status",
+      status: "ok"
+    }
+  }
+
+  ⟁endpoint⟁ GET "/status" {
+    return {
+      uptime: state.uptime,
+      requests: state.requests,
+      healthy: state.healthy
+    }
+  }
+
+  ⟁endpoint⟁ GET "/health" {
+    return { healthy: state.healthy }
+  }
+
+  ⟁ws⟁ "/ws/status" {
+    // server pushes snapshots; clients cannot send messages
+    onConnect {
+      send snapshot()
+    }
+  }
+
+  ⟁fn⟁ snapshot {
+    return {
+      ts: now(),
+      uptime: state.uptime,
+      requests: state.requests,
+      healthy: state.healthy
+    }
+  }
+
+  ⟁loop⟁ tick {
+    Wo state.uptime += 1
+    Wo state.last_tick_ms = now()
+
+    broadcast "/ws/status" snapshot()
+
+    Sek wait 1000 -> tick
+  }
+
+}

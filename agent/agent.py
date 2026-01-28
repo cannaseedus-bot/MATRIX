@@ -9,14 +9,6 @@ from pathlib import Path
 import requests
 from flask import Flask, jsonify, request
 
-BROKER_URL = os.getenv("BROKER_URL", "https://yourdomain.com/api")
-AGENT_NAME = os.getenv("AGENT_NAME", "Agent1")
-API_KEY = os.getenv("API_KEY")
-LOCAL_TOKEN = os.getenv("LOCAL_TOKEN")
-POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "5"))
-COMMAND_TIMEOUT = int(os.getenv("COMMAND_TIMEOUT", "60"))
-AGENT_HOST = os.getenv("AGENT_HOST", "127.0.0.1")
-LOCAL_ORIGIN = os.getenv("LOCAL_ORIGIN", "*")
 CONFIG_PATH = Path(__file__).with_name("agent_config.json")
 
 
@@ -45,30 +37,11 @@ POLL_INTERVAL = float(_config_value("poll_interval", "5"))
 COMMAND_TIMEOUT = int(_config_value("command_timeout", "60"))
 ALLOW_SHELL = str(_config_value("allow_shell", "false")).lower() in {"1", "true", "yes"}
 ALLOWED_COMMANDS = _CONFIG.get("allowed_commands", [])
-LISTEN_HOST = _config_value("listen_host", "0.0.0.0")
+LISTEN_HOST = _config_value("listen_host", "127.0.0.1")
 LISTEN_PORT = int(_config_value("listen_port", "5001"))
+LOCAL_ORIGIN = _config_value("local_origin", "*")
 
 app = Flask(__name__)
-
-
-def _corsify(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-LOCAL-TOKEN"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    return response
-
-
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        return _corsify(app.response_class())
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        return ("", 204)
 
 
 @app.after_request
@@ -91,11 +64,6 @@ def _headers():
     return {"X-API-KEY": API_KEY}
 
 
-def _authorized() -> bool:
-    if not LOCAL_TOKEN:
-        return True
-    provided = request.headers.get("X-LOCAL-TOKEN")
-    return provided == LOCAL_TOKEN
 def _authorize_local() -> bool:
     if not LOCAL_API_TOKEN:
         return True
@@ -151,18 +119,7 @@ def run_local_command(cmd: str) -> tuple[str, str]:
     return output, ""
 
 
-@app.route("/run", methods=["POST", "OPTIONS"])
-def run_command():
-    if not _authorized():
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, X-LOCAL-TOKEN"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    return response
-
-
-@app.route("/status", methods=["GET"])
+@app.route("/status", methods=["GET", "OPTIONS"])
 def status():
     if not _authorize_local():
         return jsonify({"error": "Unauthorized"}), 401
@@ -177,9 +134,8 @@ def status():
     )
 
 
-@app.route("/run", methods=["POST"])
+@app.route("/run", methods=["POST", "OPTIONS"])
 def run_command():
-    if not _authorized():
     if not _authorize_local():
         return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(silent=True) or {}
@@ -192,25 +148,6 @@ def run_command():
         return jsonify({"error": error, "output": output}), 400
 
     return jsonify({"output": output})
-
-
-@app.route("/status", methods=["GET", "OPTIONS"])
-@app.route("/status", methods=["GET"])
-def status():
-    if not _authorized():
-        return jsonify({"error": "Unauthorized"}), 401
-    return jsonify(
-        {
-            "agent_name": AGENT_NAME,
-            "broker_url": BROKER_URL,
-            "poll_interval": POLL_INTERVAL,
-        }
-    )
-
-
-@app.after_request
-def apply_cors(response):
-    return _corsify(response)
 
 
 def poll_broker():
@@ -226,11 +163,11 @@ def poll_broker():
             task = response.json()
             if task and task.get("command"):
                 output, error = run_local_command(task["command"])
-                status = "error" if error else "done"
+                task_status = "error" if error else "done"
                 result = error if error else output
                 requests.post(
                     f"{BROKER_URL}/submit_result.php",
-                    json={"task_id": task["id"], "result": result, "status": status},
+                    json={"task_id": task["id"], "result": result, "status": task_status},
                     headers=_headers(),
                     timeout=15,
                 )
@@ -242,5 +179,4 @@ def poll_broker():
 if __name__ == "__main__":
     thread = threading.Thread(target=poll_broker, daemon=True)
     thread.start()
-    app.run(host=AGENT_HOST, port=int(os.getenv("AGENT_PORT", "5001")))
     app.run(host=LISTEN_HOST, port=LISTEN_PORT)

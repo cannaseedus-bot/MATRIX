@@ -1,0 +1,119 @@
+/**
+ * MX2LM CSS Micronaut Panel
+ *
+ * Projection-only UI that reacts to server signals.
+ * No JS logic - CSS variables drive all states.
+ */
+
+:root {
+  /* Micronaut targets (set by WebSocket binding) */
+  --mx2lm-health: 1;      /* 0..1 */
+  --mx2lm-uptime: 0;      /* seconds */
+  --mx2lm-traffic: 0;     /* normalized 0..1 */
+  --mx2lm-glow: 0;        /* 0..1 */
+  --mx2lm-alert: 0;       /* 0..1 */
+  --mx2lm-drift: 0;       /* 0..1 */
+}
+
+/* Main panel container */
+.mx2lm-panel {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: color-mix(in oklab, #0b1020, #0f172a 60%);
+  box-shadow:
+    0 0 calc(20px * var(--mx2lm-glow)) rgba(80, 200, 255, 0.35);
+  transition: box-shadow 0.2s ease, opacity 0.2s ease;
+  opacity: calc(0.6 + 0.4 * var(--mx2lm-health));
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+  color: #e2e8f0;
+}
+
+/* Health indicator bar */
+.mx2lm-indicator {
+  height: 6px;
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg,
+      #22c55e calc(100% * var(--mx2lm-health)),
+      #334155 0);
+  transition: background 0.3s ease;
+}
+
+/* Alert state (when health drops) */
+.mx2lm-panel[data-alert="true"] {
+  box-shadow:
+    0 0 calc(30px * var(--mx2lm-alert)) rgba(255, 100, 100, 0.5);
+}
+
+/* Uptime counter */
+.mx2lm-uptime {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.mx2lm-uptime::after {
+  content: "s uptime";
+  margin-left: 0.25em;
+}
+
+/* Traffic pulse animation */
+.mx2lm-traffic-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse calc(2s - 1.5s * var(--mx2lm-traffic)) ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Glow ring for activity */
+.mx2lm-glow-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#0b1020, #0b1020) padding-box,
+    linear-gradient(
+      135deg,
+      rgba(80, 200, 255, calc(0.5 * var(--mx2lm-glow))),
+      rgba(120, 80, 255, calc(0.3 * var(--mx2lm-glow)))
+    ) border-box;
+  pointer-events: none;
+}
+
+/* Status label */
+.mx2lm-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.mx2lm-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: color-mix(
+    in oklab,
+    #22c55e calc(100% * var(--mx2lm-health)),
+    #ef4444
+  );
+}
+
+/* Drift indicator (server lag) */
+.mx2lm-drift-bar {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    #3b82f6 calc(100% * (1 - var(--mx2lm-drift))),
+    #f59e0b 0
+  );
+  border-radius: 1px;
+  margin-top: 4px;
+}
