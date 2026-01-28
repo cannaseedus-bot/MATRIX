@@ -1,0 +1,411 @@
+{
+  "@context": "asx://agents/css-quadrant/unified/v1",
+  "@version": "1.0.0",
+  "@law": "ASX = XCFE = XJSON = KUHUL = AST = CM-1",
+  "@generated": "2026-01-27T00:00:00Z",
+  "@cm1_phase": "\u0001CSS_AGENTS_QUADRANT_UNIFIED\u0002",
+
+  "@agents_registry": {
+    "@total": 4,
+    "@execution_order": [
+      "CSS_ATOMIC_AGENT",
+      "CSS_XCFE_AGENT",
+      "CSS_RUNTIME_AGENT",
+      "CSS_SVG_3D_AGENT"
+    ],
+    "@pipeline": "ATOMIC → XCFE → RUNTIME → SVG-3D",
+    "@binding": "manifest.json + index.html + sw.khl"
+  },
+
+  "CSS_ATOMIC_AGENT": {
+    "@cm1_scope": "\u000EATOMIC\u000F",
+    "@role": "atomic_css_specialist",
+    "@domain": ["atomic.tokens", "atomic.blocks", "visual.primitives"],
+    "@stack": ["XJSON", "KUHUL", "AST", "ATOMIC.CSS", "CM-1"],
+    "@brain": "structural_intelligence",
+    "@horizontal_fold": 2,
+
+    "@control": {
+      "@perception": [
+        "brand_palette",
+        "ui_primitives",
+        "state_vectors"
+      ],
+      "@representation": "atomic_token_ast",
+      "@reasoning": "token_normalization_and_reduction",
+      "@decision": "final_atomic_variable_set",
+      "@action": "write_atomic_css_and_atomic_xjson",
+      "@reflection": "visual_entropy_audit"
+    },
+
+    "@variables": {
+      "@entropy": {
+        "@type": "float",
+        "@range": [0.0, 1.0],
+        "@default": 0.15,
+        "@meaning": "visual_variance_tolerance"
+      },
+      "@stability": {
+        "@type": "float",
+        "@range": [0.0, 1.0],
+        "@default": 0.85,
+        "@meaning": "design_consistency_requirement"
+      },
+      "@meta_dominance": {
+        "@type": "float",
+        "@range": [0.0, 1.0],
+        "@default": 0.92,
+        "@meaning": "global_token_authority_weight"
+      }
+    },
+
+    "@api": {
+      "forge_atomic_css": {
+        "@method": "POST",
+        "@path": "/css/atomic/forge",
+        "@input": {
+          "brand_palette": "object",
+          "ui_primitives": "object",
+          "target_entropy": "float?"
+        },
+        "@output": {
+          "atomic_css": "string",
+          "atomic_xjson": "object",
+          "compression_hints": "object"
+        }
+      }
+    },
+
+    "@kuhul_execution": {
+      "@entry": "[Pop css_atomic_agent]",
+      "@pipeline": [
+        "[Wo atomic_token_spec] → [Ch'en token_view]",
+        "[Yax atomic_token_spec] → [Sek generate_atomic_css]",
+        "[Yax atomic_css_ast] → [Sek bind_to_atomic_xjson]",
+        "[Sek inject_into_manifest]"
+      ],
+      "@exit": "[Xul]"
+    },
+
+    "@output_targets": {
+      "atomic.css": "/mnt/user-data/outputs/atomic.css",
+      "atomic.xjson": "/mnt/user-data/outputs/atomic.xjson",
+      "manifest_merge": "manifest.json:asx_os.css.atomic"
+    }
+  },
+
+  "CSS_XCFE_AGENT": {
+    "@cm1_scope": "\u000EXCFE\u000F",
+    "@role": "xcfe_css_specialist",
+    "@domain": ["control.flow", "css.execution", "state.modes"],
+    "@stack": ["XJSON", "KUHUL", "AST", "XCFE.CSS", "CM-1"],
+    "@brain": "causal_intelligence",
+    "@horizontal_fold": 1,
+
+    "@control": {
+      "@perception": [
+        "@control_vectors",
+        "runtime_modes",
+        "cm1_phase_markers"
+      ],
+      "@representation": "xcfe_css_ast",
+      "@reasoning": "flow_to_class_mapping",
+      "@decision": "mode_activation_rules",
+      "@action": "emit_xcfe_css",
+      "@reflection": "flow_correctness_validation"
+    },
+
+    "@variables": {
+      "@entropy": {
+        "@type": "float",
+        "@default": 0.12,
+        "@meaning": "mode_variation_tolerance"
+      },
+      "@stability": {
+        "@type": "float",
+        "@default": 0.88,
+        "@meaning": "control_rigidity_requirement"
+      }
+    },
+
+    "@xcfe_control_mapping": {
+      "@if": ".xcfe-if",
+      "@then": ".xcfe-then",
+      "@else": ".xcfe-else",
+      "@loop": ".xcfe-loop",
+      "@dispatch": ".xcfe-dispatch",
+      "@route": ".xcfe-route",
+      "@return": ".xcfe-return",
+      "@perception": ".xcfe-perception",
+      "@representation": ".xcfe-representation",
+      "@reasoning": ".xcfe-reasoning",
+      "@decision": ".xcfe-decision",
+      "@action": ".xcfe-action",
+      "@reflection": ".xcfe-reflection"
+    },
+
+    "@cm1_control_mapping": {
+      "\u0001": "@control.header.begin → .cm1-header",
+      "\u0002": "@control.body.begin → .cm1-body",
+      "\u0003": "@control.body.end → .cm1-body-end",
+      "\u0004": "@control.transmission.end → .cm1-flush",
+      "\u000E": "@control.scope.push → .cm1-scope-push",
+      "\u000F": "@control.scope.pop → .cm1-scope-pop"
+    },
+
+    "@api": {
+      "forge_xcfe_css": {
+        "@method": "POST",
+        "@path": "/css/xcfe/forge",
+        "@input": {
+          "control_vectors": "object",
+          "runtime_modes": "array",
+          "cm1_markers": "boolean?"
+        },
+        "@output": {
+          "xcfe_css": "string",
+          "xcfe_xjson": "object",
+          "cm1_annotated": "boolean"
+        }
+      }
+    },
+
+    "@kuhul_execution": {
+      "@entry": "[Pop css_xcfe_agent]",
+      "@pipeline": [
+        "[Wo control_vector_spec] → [Ch'en vector_view]",
+        "[Yax control_vector_spec] → [Sek generate_xcfe_css]",
+        "[Yax xcfe_css_ast] → [Sek bind_to_control_classes]",
+        "[Sek register_xcfe_runtime]"
+      ],
+      "@exit": "[Xul]"
+    },
+
+    "@output_targets": {
+      "xcfe.css": "/mnt/user-data/outputs/xcfe.css",
+      "xcfe.xjson": "/mnt/user-data/outputs/xcfe.xjson",
+      "manifest_merge": "manifest.json:asx_os.css.xcfe"
+    }
+  },
+
+  "CSS_RUNTIME_AGENT": {
+    "@cm1_scope": "\u000ERUNTIME\u000F",
+    "@role": "css_runtime_specialist",
+    "@domain": ["css.physics", "runtime.state", "dom.energy"],
+    "@stack": ["XJSON", "KUHUL", "AST", "RUNTIME.CSS", "CM-1"],
+    "@brain": "operational_intelligence",
+    "@horizontal_fold": 1,
+
+    "@control": {
+      "@perception": [
+        "dom_state",
+        "ui_activity",
+        "sensor_events",
+        "cm1_phase_transitions"
+      ],
+      "@representation": "runtime_css_ast",
+      "@reasoning": "state_to_force_calculation",
+      "@decision": "energy_and_velocity_allocation",
+      "@action": "apply_runtime_css_to_dom",
+      "@reflection": "runtime_performance_metrics"
+    },
+
+    "@variables": {
+      "@velocity": {
+        "@type": "float",
+        "@unit": "px/ms",
+        "@default": 0.5,
+        "@meaning": "ui_motion_speed"
+      },
+      "@mass": {
+        "@type": "float",
+        "@unit": "abstract",
+        "@default": 1.0,
+        "@meaning": "ui_inertia_weight"
+      },
+      "@entropy": {
+        "@type": "float",
+        "@default": 0.08,
+        "@meaning": "state_noise_tolerance"
+      }
+    },
+
+    "@physics_engine": {
+      "@enabled": true,
+      "@gravity": 0.0,
+      "@friction": 0.85,
+      "@spring_constant": 0.3,
+      "@damping": 0.7
+    },
+
+    "@api": {
+      "activate_css_runtime": {
+        "@method": "POST",
+        "@path": "/css/runtime/activate",
+        "@input": {
+          "runtime_spec": "object",
+          "physics_config": "object?",
+          "cm1_phases": "boolean?"
+        },
+        "@output": {
+          "runtime_css": "string",
+          "runtime_xjson": "object",
+          "active_state": "object"
+        }
+      }
+    },
+
+    "@kuhul_execution": {
+      "@entry": "[Pop css_runtime_agent]",
+      "@pipeline": [
+        "[Wo runtime_state_spec] → [Ch'en runtime_view]",
+        "[Yax runtime_state_spec] → [Sek generate_runtime_css]",
+        "[Yax runtime_css_ast] → [Sek bind_to_dom_engine]",
+        "[Sek activate_css_runtime]"
+      ],
+      "@exit": "[Xul]"
+    },
+
+    "@output_targets": {
+      "runtime.css": "/mnt/user-data/outputs/runtime.css",
+      "runtime.xjson": "/mnt/user-data/outputs/runtime.xjson",
+      "manifest_merge": "manifest.json:asx_os.css.runtime"
+    }
+  },
+
+  "CSS_SVG_3D_AGENT": {
+    "@cm1_scope": "\u000ESVG_3D\u000F",
+    "@role": "css_svg_3d_specialist",
+    "@domain": ["svg", "3d", "motion", "kuhul-3d"],
+    "@stack": ["XJSON", "KUHUL", "AST", "SVG-3D.CSS", "CM-1"],
+    "@brain": "spatial_visual_intelligence",
+    "@horizontal_fold": 4,
+
+    "@control": {
+      "@perception": [
+        "scene_graph",
+        "lighting",
+        "camera_vectors",
+        "cm1_spatial_markers"
+      ],
+      "@representation": "svg_3d_ast",
+      "@reasoning": "spatial_composition_and_depth",
+      "@decision": "transform_and_material_binding",
+      "@action": "render_via_kuhul_3d_scene",
+      "@reflection": "frame_coherence_and_user_depth_feedback"
+    },
+
+    "@variables": {
+      "@rotation": {
+        "@type": "vec3",
+        "@unit": "degrees",
+        "@default": [0, 0, 0],
+        "@meaning": "scene_spin_orientation"
+      },
+      "@velocity": {
+        "@type": "float",
+        "@unit": "degrees/frame",
+        "@default": 0.3,
+        "@meaning": "camera_rotation_speed"
+      },
+      "@entropy": {
+        "@type": "float",
+        "@default": 0.05,
+        "@meaning": "visual_turbulence_factor"
+      }
+    },
+
+    "@3d_engine": {
+      "@renderer": "svg_based",
+      "@projection": "perspective",
+      "@fov": 60,
+      "@near_clip": 0.1,
+      "@far_clip": 1000,
+      "@lighting_model": "phong"
+    },
+
+    "@api": {
+      "activate_svg_3d": {
+        "@method": "POST",
+        "@path": "/css/svg-3d/activate",
+        "@input": {
+          "scene_spec": "object",
+          "camera_config": "object?",
+          "cm1_3d_markers": "boolean?"
+        },
+        "@output": {
+          "svg_3d_css": "string",
+          "svg_3d_xjson": "object",
+          "scene_graph": "object"
+        }
+      }
+    },
+
+    "@kuhul_execution": {
+      "@entry": "[Pop css_svg_3d_agent]",
+      "@pipeline": [
+        "[Wo scene_spec] → [Ch'en scene_preview]",
+        "[Yax scene_spec] → [Sek generate_svg_3d_ast]",
+        "[Yax svg_3d_ast] → [Sek bind_to_kuhul_3d]",
+        "[Sek activate_3d_scene]"
+      ],
+      "@exit": "[Xul]"
+    },
+
+    "@output_targets": {
+      "svg_3d.css": "/mnt/user-data/outputs/svg_3d.css",
+      "svg_3d.xjson": "/mnt/user-data/outputs/svg_3d.xjson",
+      "manifest_merge": "manifest.json:asx_os.css.svg_3d"
+    }
+  },
+
+  "@unified_orchestration": {
+    "@cm1_pipeline": "\u0001QUADRANT_ORCHESTRATION\u0002",
+
+    "@execution_flow": {
+      "phase_1_atomic": {
+        "@cm1": "\u000EATOMIC\u000F",
+        "@agent": "CSS_ATOMIC_AGENT",
+        "@output": "atomic.css + atomic.xjson"
+      },
+      "phase_2_xcfe": {
+        "@cm1": "\u000EXCFE\u000F",
+        "@agent": "CSS_XCFE_AGENT",
+        "@input": "atomic.xjson",
+        "@output": "xcfe.css + xcfe.xjson"
+      },
+      "phase_3_runtime": {
+        "@cm1": "\u000ERUNTIME\u000F",
+        "@agent": "CSS_RUNTIME_AGENT",
+        "@input": "xcfe.xjson",
+        "@output": "runtime.css + runtime.xjson"
+      },
+      "phase_4_svg_3d": {
+        "@cm1": "\u000ESVG_3D\u000F",
+        "@agent": "CSS_SVG_3D_AGENT",
+        "@input": "runtime.xjson",
+        "@output": "svg_3d.css + svg_3d.xjson"
+      }
+    },
+
+    "@final_merge": {
+      "@target": "index.html",
+      "@css_injection": [
+        "atomic.css",
+        "xcfe.css",
+        "runtime.css",
+        "svg_3d.css"
+      ],
+      "@manifest_update": "manifest.json:asx_os.css_quadrant",
+      "@cm1_marker": "\u0004CSS_QUADRANT_COMPLETE\u0003"
+    }
+  },
+
+  "@omega_seal": {
+    "@authority": "CSS_QUADRANT_UNIFIED_v1.0.0",
+    "@verification": "FOUR_AGENTS_ACTIVE_CM1_ANNOTATED",
+    "@compression_ready": "SCXQ2_COMPATIBLE",
+    "@dom_safe": "PROJECTION_INVARIANT_PRESERVED",
+    "@identity": "CSS(x) ≅ XCFE(x) ≅ AST(x) ≅ CM-1(x) ≅ Ω(x)"
+  }
+}
