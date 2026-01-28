@@ -1,0 +1,34 @@
+{
+  "$schema": "xjson://schema/core/v1",
+  "@id": "xcfe://schema/ps-dsl/v1",
+  "@kind": "schema",
+  "@purpose": "Finite, declarative PowerShell intent DSL",
+  "@invariants": [
+    "no-free-text",
+    "no-expressions",
+    "no-pipes",
+    "no-scriptblocks",
+    "single-cmdlet-lowering"
+  ],
+  "type": "object",
+  "required": ["@dsl", "action"],
+  "properties": {
+    "@dsl": {
+      "const": "ps-dsl.v1"
+    },
+    "action": {
+      "type": "string",
+      "pattern": "^[a-z]+\\.[a-z]+$",
+      "description": "Dotted verb.noun action identifier"
+    },
+    "params": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean"],
+        "pattern": "^[A-Za-z0-9_.:-]+$"
+      },
+      "description": "Literal-only parameters (no metacharacters)"
+    }
+  },
+  "additionalProperties": false
+}

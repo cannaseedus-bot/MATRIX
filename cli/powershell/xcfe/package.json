@@ -1,0 +1,23 @@
+{
+  "name": "psx-cli",
+  "version": "1.0.0",
+  "description": "Governed PowerShell execution via XCFE + PS-DSL",
+  "type": "module",
+  "main": "psx-cli.js",
+  "bin": {
+    "psx": "./psx-cli.js"
+  },
+  "scripts": {
+    "start": "node psx-cli.js"
+  },
+  "keywords": [
+    "powershell",
+    "xcfe",
+    "cm1",
+    "ps-dsl"
+  ],
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -128,7 +128,10 @@ MATRIX/
 │   ├── powershell/         # PowerShell static server
 │   │   ├── server.ps1      # Main server script
 │   │   ├── start-server.bat# Windows launcher
-│   │   └── public/         # Static files root
+│   │   ├── public/         # Static files root
+│   │   └── xcfe/           # XCFE governed execution
+│   │       ├── psx-cli.js  # PS-DSL CLI
+│   │       └── cm1-wrapper.js  # CM-1 audit binding
 │   └── ui/                 # CSS Micronaut UI
 │
 ├── pwa/                    # Progressive Web App
@@ -143,6 +146,7 @@ MATRIX/
 ├── specs/                  # Language Specifications
 │   ├── mxs/                # MXS stylesheets
 │   ├── kuhul/              # KUHUL class definitions
+│   ├── cm1/                # Control Micronaut-1 spec
 │   └── server/             # Server schemas
 │
 ├── inference/              # Inference Plains
@@ -238,6 +242,36 @@ KUHUL-governed static file server for Windows:
 | `/*`             | Static files from root   |
 
 KUHUL Class: `api.local.static` (read-only, localhost only)
+
+## XCFE Governed Execution (PSX)
+
+Deny-by-default PowerShell execution via PS-DSL:
+
+```bash
+# List allowed actions
+node cli/powershell/xcfe/psx-cli.js --list-actions
+
+# Execute an intent
+node cli/powershell/xcfe/psx-cli.js examples/process-list.json
+```
+
+Intent format (PS-DSL):
+
+```json
+{
+  "@dsl": "ps-dsl.v1",
+  "action": "process.list",
+  "params": {}
+}
+```
+
+Features:
+- **Deny-by-default**: Only allowlisted actions can execute
+- **No arbitrary text**: PowerShell never receives raw user input
+- **CM-1 auditable**: All executions carry phase geometry
+- **Deterministic lowering**: DSL intents lower to single cmdlets
+
+See [cli/powershell/xcfe/README.md](cli/powershell/xcfe/README.md) for full specification.
 
 ## Architecture
 

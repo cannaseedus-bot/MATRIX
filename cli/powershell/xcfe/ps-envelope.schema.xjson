@@ -1,0 +1,74 @@
+{
+  "$schema": "xjson://schema/core/v1",
+  "@id": "xcfe://schema/ps-envelope/v1",
+  "@kind": "schema",
+  "@purpose": "XCFE legality envelope for governed PowerShell execution",
+
+  "type": "object",
+  "required": ["@xcfe", "@control", "@capability", "@intent"],
+
+  "properties": {
+    "@xcfe": {
+      "const": "ps-envelope.v1"
+    },
+
+    "@control": {
+      "type": "object",
+      "required": ["phase", "target"],
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["delegate.external"]
+        },
+        "target": {
+          "type": "string",
+          "enum": ["powershell"]
+        },
+        "audit": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+
+    "@capability": {
+      "type": "object",
+      "properties": {
+        "powershell": {
+          "type": "boolean",
+          "const": true
+        },
+        "interactive": {
+          "type": "boolean",
+          "const": false
+        },
+        "network": {
+          "type": "boolean",
+          "const": false
+        },
+        "filesystem": {
+          "type": "string",
+          "enum": ["none", "read-only"]
+        }
+      }
+    },
+
+    "@intent": {
+      "$ref": "ps-dsl.schema.xjson"
+    },
+
+    "@constraints": {
+      "type": "object",
+      "properties": {
+        "max_output_kb": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10240,
+          "default": 512
+        }
+      }
+    }
+  },
+
+  "additionalProperties": false
+}
