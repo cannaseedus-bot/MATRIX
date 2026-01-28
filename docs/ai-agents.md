@@ -217,19 +217,49 @@ curl http://127.0.0.1:5001/status
 | `mistral`     | 7B     | General purpose             |
 | `mixtral`     | 47B    | High quality, needs GPU     |
 
-### Cloud Models
+### Cloud Models - Frontier / Ultra-Large
 
-| Model              | Description                    |
-|--------------------|--------------------------------|
-| `gpt-oss:120b`     | Large model, cloud-only        |
-| `gpt-oss:120b-cloud` | Explicit cloud variant       |
+These models only run in the cloud due to size.
+
+| Model                    | Size   | Description                        |
+|--------------------------|--------|------------------------------------|
+| `deepseek-v3.1:671b-cloud` | 671B | Frontier model                     |
+| `gpt-oss:120b-cloud`     | 120B   | Open-source GPT-OSS variant        |
+| `kimi-k2:1t-cloud`       | 1T     | Trillion-parameter class model     |
+| `qwen3-coder:480b-cloud` | 480B   | Code-specialized model             |
+| `qwen3-vl:235b-cloud`    | 235B   | Vision-language model              |
+
+### Cloud Models - Large General-Purpose
+
+| Model                     | Description                              |
+|---------------------------|------------------------------------------|
+| `glm-4.6:cloud`           | High-end GLM series model                |
+| `glm-4.7`                 | Coding-optimized GLM variant             |
+| `minimax-m2.1`            | Multilingual, strong for code + reasoning|
+| `gemini-3-flash-preview`  | Fast, low-cost frontier intelligence     |
+
+### Cloud Models - Agentic / Tool-Using
+
+Optimized for tool use, code navigation, and agent workflows.
+
+| Model               | Size | Description                                    |
+|---------------------|------|------------------------------------------------|
+| `nemotron-3-nano`   | 30B  | Efficient agentic model with tool-use          |
+| `devstral-small-2`  | 24B  | Codebase exploration + multi-file editing      |
+| `rnj-1`             | 8B   | STEM + code-optimized open-weight family       |
 
 ### Pull a Model
 
 ```bash
+# Local models
 ollama pull llama3.2
 ollama pull codellama
 ollama pull mistral
+
+# Cloud models (requires ollama signin)
+ollama pull gpt-oss:120b-cloud
+ollama pull deepseek-v3.1:671b-cloud
+ollama pull qwen3-coder:480b-cloud
 ```
 
 ## Broker Task Format
