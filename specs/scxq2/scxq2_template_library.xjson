@@ -1,0 +1,621 @@
+{
+  "@context": "asx://scxq2/templates/library/v1",
+  "@version": "1.0.0",
+  "@law": "ASX = XCFE = XJSON = KUHUL = AST = CM-1 = SCXQ2",
+  "@generated": "2026-01-27T00:00:00Z",
+  "@cm1_phase": "\u0001SCXQ2_TEMPLATE_LIBRARY\u0002",
+
+  "@library_metadata": {
+    "@total_templates": 12,
+    "@categories": ["G", "S", "R", "Q", "A", "M"],
+    "@compression_target": 0.00015,
+    "@glyph_based": true,
+    "@quantum_compatible": true
+  },
+
+  "@templates": {
+    "T_GAME_WORLD_v3": {
+      "@cm1_scope": "\u000EGAME_WORLD\u000F",
+      "@id": "T_GAME_WORLD_v3",
+      "@category": "G",
+      "@description": "TES/DOOM hybrid game world with zones, entities, rules, HUD",
+      "@glyph_pattern": ["🎮", "🌐", "🔄", "🎯", "📦", "✨"],
+      "@structure": "WORLD={name,type,dimensions,zones,entities,rules,hud}",
+
+      "@variables": [
+        {
+          "@slot": "name",
+          "@type": "string",
+          "@example": "Salt Frontier · Emerald Rift"
+        },
+        {
+          "@slot": "type",
+          "@type": "enum",
+          "@options": ["TES_DOOM", "CYBERPUNK", "FANTASY", "QUANTUM"],
+          "@default": "TES_DOOM"
+        },
+        {
+          "@slot": "dimensions",
+          "@type": "object",
+          "@schema": {
+            "width": "float",
+            "height": "float",
+            "depth": "float"
+          }
+        },
+        {
+          "@slot": "zones",
+          "@type": "array",
+          "@template_ref": "T_ZONE_v2"
+        },
+        {
+          "@slot": "entities",
+          "@type": "array",
+          "@template_ref": "T_ENTITY_v1"
+        },
+        {
+          "@slot": "rules",
+          "@type": "object",
+          "@template_ref": "T_GAME_RULES_v3"
+        },
+        {
+          "@slot": "hud",
+          "@type": "object",
+          "@template_ref": "T_HUD_v2"
+        }
+      ],
+
+      "@dependencies": ["T_ZONE_v2", "T_ENTITY_v1", "T_GAME_RULES_v3", "T_HUD_v2"],
+      "@compression_ratio": 0.0027,
+      "@quantum_circuit": "game_world_compress_qc",
+      "@xcfe_binding": "@control.game.world"
+    },
+
+    "T_QUANTUM_WORLD_v1": {
+      "@cm1_scope": "\u000EQUANTUM_WORLD\u000F",
+      "@id": "T_QUANTUM_WORLD_v1",
+      "@category": "Q",
+      "@description": "Quantum game world with superposition states and entanglement",
+      "@glyph_pattern": ["🎮", "⚛️", "🌀", "🌌", "💎"],
+      "@structure": "QWORLD={world_id,superposition_states,probability_amplitudes,collapse_conditions,entangled_systems}",
+
+      "@variables": [
+        {
+          "@slot": "world_id",
+          "@type": "string",
+          "@example": "tes_doom_quantum_abc123"
+        },
+        {
+          "@slot": "superposition_states",
+          "@type": "array",
+          "@schema": {
+            "id": "string",
+            "zones": "array",
+            "probability": "float"
+          }
+        },
+        {
+          "@slot": "probability_amplitudes",
+          "@type": "array",
+          "@item_type": "complex_number"
+        },
+        {
+          "@slot": "collapse_conditions",
+          "@type": "object",
+          "@schema": {
+            "trigger": "string",
+            "target_state": "string",
+            "probability": "float"
+          }
+        },
+        {
+          "@slot": "entangled_systems",
+          "@type": "array",
+          "@schema": {
+            "system_a": "string",
+            "system_b": "string",
+            "entanglement_strength": "float"
+          }
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0012,
+      "@quantum_circuit": "quantum_world_compress_qc",
+      "@xcfe_binding": "@control.quantum.world"
+    },
+
+    "T_STUDIO_UI_v2": {
+      "@cm1_scope": "\u000ESTUDIO_UI\u000F",
+      "@id": "T_STUDIO_UI_v2",
+      "@category": "S",
+      "@description": "Studio interface with layout, components, theme, tools, panels",
+      "@glyph_pattern": ["🎨", "🖥️", "🔧", "⚙️", "📊"],
+      "@structure": "UI={layout,components,theme,tools,panels}",
+
+      "@variables": [
+        {
+          "@slot": "layout",
+          "@type": "object",
+          "@template_ref": "T_LAYOUT_v1"
+        },
+        {
+          "@slot": "components",
+          "@type": "array",
+          "@template_ref": "T_COMPONENT_v1"
+        },
+        {
+          "@slot": "theme",
+          "@type": "object",
+          "@template_ref": "T_THEME_v1"
+        },
+        {
+          "@slot": "tools",
+          "@type": "array",
+          "@item_type": "string"
+        },
+        {
+          "@slot": "panels",
+          "@type": "array",
+          "@template_ref": "T_PANEL_v1"
+        }
+      ],
+
+      "@dependencies": ["T_LAYOUT_v1", "T_COMPONENT_v1", "T_THEME_v1", "T_PANEL_v1"],
+      "@compression_ratio": 0.0025,
+      "@quantum_circuit": "studio_ui_compress_qc",
+      "@xcfe_binding": "@control.studio.ui"
+    },
+
+    "T_RUNTIME_KERNEL_v4": {
+      "@cm1_scope": "\u000ERUNTIME_KERNEL\u000F",
+      "@id": "T_RUNTIME_KERNEL_v4",
+      "@category": "R",
+      "@description": "Runtime kernel with architecture, modules, optimization, settings",
+      "@glyph_pattern": ["⚙️", "⚡", "🔄", "🌐", "🔗"],
+      "@structure": "KERNEL={arch,modules,optimization,settings,hooks}",
+
+      "@variables": [
+        {
+          "@slot": "arch",
+          "@type": "enum",
+          "@options": ["ASXR", "QUANTUM", "HYBRID", "LEGION"],
+          "@default": "ASXR"
+        },
+        {
+          "@slot": "modules",
+          "@type": "array",
+          "@item_type": "string"
+        },
+        {
+          "@slot": "optimization",
+          "@type": "object",
+          "@schema": {
+            "jit_enabled": "boolean",
+            "compression": "boolean",
+            "parallel_folds": "int"
+          }
+        },
+        {
+          "@slot": "settings",
+          "@type": "object"
+        },
+        {
+          "@slot": "hooks",
+          "@type": "array",
+          "@schema": {
+            "event": "string",
+            "handler": "string"
+          }
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0017,
+      "@quantum_circuit": "runtime_kernel_compress_qc",
+      "@xcfe_binding": "@control.runtime.kernel"
+    },
+
+    "T_EMERALD_THEME_v1": {
+      "@cm1_scope": "\u000EEMERALD_THEME\u000F",
+      "@id": "T_EMERALD_THEME_v1",
+      "@category": "A",
+      "@description": "Emerald Ghost glass morphic theme with atomic tokens",
+      "@glyph_pattern": ["💎", "🎨", "✨", "🔮"],
+      "@structure": "THEME={colors,spacing,typography,effects,atomic_tokens}",
+
+      "@variables": [
+        {
+          "@slot": "colors",
+          "@type": "object",
+          "@schema": {
+            "bg": "string",
+            "fg": "string",
+            "accent": "array",
+            "glass": "object"
+          }
+        },
+        {
+          "@slot": "spacing",
+          "@type": "object",
+          "@schema": {
+            "scale": "array",
+            "unit": "string"
+          }
+        },
+        {
+          "@slot": "typography",
+          "@type": "object",
+          "@schema": {
+            "font_family": "string",
+            "scale": "array"
+          }
+        },
+        {
+          "@slot": "effects",
+          "@type": "object",
+          "@schema": {
+            "blur": "string",
+            "glow": "string",
+            "shadow": "string"
+          }
+        },
+        {
+          "@slot": "atomic_tokens",
+          "@type": "object",
+          "@description": "CSS custom properties map"
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0032,
+      "@quantum_circuit": "emerald_theme_compress_qc",
+      "@xcfe_binding": "@control.theme.emerald"
+    },
+
+    "T_AGENT_PROFILE_v1": {
+      "@cm1_scope": "\u000EAGENT_PROFILE\u000F",
+      "@id": "T_AGENT_PROFILE_v1",
+      "@category": "A",
+      "@description": "AI agent profile with specialization, brain affinity, glyph signature",
+      "@glyph_pattern": ["🤖", "🧠", "⚡", "💎"],
+      "@structure": "AGENT={id,label,domain,specialization,brain_affinity,glyph_signature,horizontal_fold}",
+
+      "@variables": [
+        {
+          "@slot": "id",
+          "@type": "string",
+          "@pattern": "agent\\.[a-z_]+"
+        },
+        {
+          "@slot": "label",
+          "@type": "string"
+        },
+        {
+          "@slot": "domain",
+          "@type": "string"
+        },
+        {
+          "@slot": "specialization",
+          "@type": "string"
+        },
+        {
+          "@slot": "brain_affinity",
+          "@type": "array",
+          "@item_type": "string"
+        },
+        {
+          "@slot": "glyph_signature",
+          "@type": "array",
+          "@item_type": "string"
+        },
+        {
+          "@slot": "horizontal_fold",
+          "@type": "int",
+          "@range": [0, 7]
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0045,
+      "@quantum_circuit": "agent_profile_compress_qc",
+      "@xcfe_binding": "@control.agent.profile"
+    },
+
+    "T_MANIFEST_OS_v1": {
+      "@cm1_scope": "\u000EMANIFEST_OS\u000F",
+      "@id": "T_MANIFEST_OS_v1",
+      "@category": "M",
+      "@description": "ASX OS manifest structure with runtime, tapes, routes, DNS",
+      "@glyph_pattern": ["⚙️", "🌐", "📋", "🔗"],
+      "@structure": "MANIFEST={name,asx_os,backend_architecture,routes,dns}",
+
+      "@variables": [
+        {
+          "@slot": "name",
+          "@type": "string"
+        },
+        {
+          "@slot": "asx_os",
+          "@type": "object",
+          "@schema": {
+            "id": "string",
+            "runtime": "object",
+            "tapes_system": "object",
+            "css_quadrant": "object"
+          }
+        },
+        {
+          "@slot": "backend_architecture",
+          "@type": "object",
+          "@schema": {
+            "dns_authority": "string",
+            "rest_mesh": "array",
+            "trinity": "object"
+          }
+        },
+        {
+          "@slot": "routes",
+          "@type": "array",
+          "@item_type": "object"
+        },
+        {
+          "@slot": "dns",
+          "@type": "object"
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0038,
+      "@quantum_circuit": "manifest_os_compress_qc",
+      "@xcfe_binding": "@control.manifest.os"
+    },
+
+    "T_COMPONENT_v1": {
+      "@cm1_scope": "\u000ECOMPONENT\u000F",
+      "@id": "T_COMPONENT_v1",
+      "@category": "S",
+      "@description": "UI component with type, props, children, atomic CSS classes",
+      "@glyph_pattern": ["📦", "🎨", "🔧"],
+      "@structure": "COMPONENT={type,props,children,classes,events}",
+
+      "@variables": [
+        {
+          "@slot": "type",
+          "@type": "string",
+          "@example": "button"
+        },
+        {
+          "@slot": "props",
+          "@type": "object"
+        },
+        {
+          "@slot": "children",
+          "@type": "array",
+          "@item_type": "mixed"
+        },
+        {
+          "@slot": "classes",
+          "@type": "array",
+          "@item_type": "string",
+          "@description": "Atomic CSS classes"
+        },
+        {
+          "@slot": "events",
+          "@type": "object",
+          "@schema": {
+            "onClick": "string?",
+            "onHover": "string?"
+          }
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0052,
+      "@quantum_circuit": "component_compress_qc",
+      "@xcfe_binding": "@control.component"
+    },
+
+    "T_LAYOUT_v1": {
+      "@cm1_scope": "\u000ELAYOUT\u000F",
+      "@id": "T_LAYOUT_v1",
+      "@category": "S",
+      "@description": "Layout structure with grid, flex, or custom positioning",
+      "@glyph_pattern": ["📐", "🗂️", "📊"],
+      "@structure": "LAYOUT={type,columns,rows,gap,areas}",
+
+      "@variables": [
+        {
+          "@slot": "type",
+          "@type": "enum",
+          "@options": ["grid", "flex", "custom"]
+        },
+        {
+          "@slot": "columns",
+          "@type": "string",
+          "@example": "repeat(3, 1fr)"
+        },
+        {
+          "@slot": "rows",
+          "@type": "string?",
+          "@example": "auto"
+        },
+        {
+          "@slot": "gap",
+          "@type": "string",
+          "@example": "16px"
+        },
+        {
+          "@slot": "areas",
+          "@type": "array?",
+          "@item_type": "string"
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0048,
+      "@quantum_circuit": "layout_compress_qc",
+      "@xcfe_binding": "@control.layout"
+    },
+
+    "T_PANEL_v1": {
+      "@cm1_scope": "\u000EPANEL\u000F",
+      "@id": "T_PANEL_v1",
+      "@category": "S",
+      "@description": "Panel container with title, content, actions, glass effect",
+      "@glyph_pattern": ["📋", "💎", "✨"],
+      "@structure": "PANEL={title,subtitle,content,actions,glass_morphic}",
+
+      "@variables": [
+        {
+          "@slot": "title",
+          "@type": "string"
+        },
+        {
+          "@slot": "subtitle",
+          "@type": "string?"
+        },
+        {
+          "@slot": "content",
+          "@type": "array",
+          "@template_ref": "T_COMPONENT_v1"
+        },
+        {
+          "@slot": "actions",
+          "@type": "array",
+          "@schema": {
+            "label": "string",
+            "action": "string"
+          }
+        },
+        {
+          "@slot": "glass_morphic",
+          "@type": "boolean",
+          "@default": true
+        }
+      ],
+
+      "@dependencies": ["T_COMPONENT_v1"],
+      "@compression_ratio": 0.0042,
+      "@quantum_circuit": "panel_compress_qc",
+      "@xcfe_binding": "@control.panel"
+    },
+
+    "T_THEME_v1": {
+      "@cm1_scope": "\u000ETHEME\u000F",
+      "@id": "T_THEME_v1",
+      "@category": "A",
+      "@description": "Generic theme structure with colors, typography, spacing",
+      "@glyph_pattern": ["🎨", "🖌️", "✨"],
+      "@structure": "THEME={name,colors,typography,spacing,effects}",
+
+      "@variables": [
+        {
+          "@slot": "name",
+          "@type": "string"
+        },
+        {
+          "@slot": "colors",
+          "@type": "object"
+        },
+        {
+          "@slot": "typography",
+          "@type": "object"
+        },
+        {
+          "@slot": "spacing",
+          "@type": "object"
+        },
+        {
+          "@slot": "effects",
+          "@type": "object"
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0051,
+      "@quantum_circuit": "theme_compress_qc",
+      "@xcfe_binding": "@control.theme"
+    },
+
+    "T_TAPE_SYSTEM_v1": {
+      "@cm1_scope": "\u000ETAPE_SYSTEM\u000F",
+      "@id": "T_TAPE_SYSTEM_v1",
+      "@category": "R",
+      "@description": "Tape system definition with blocks, routes, execution pipeline",
+      "@glyph_pattern": ["📼", "🔄", "⚡"],
+      "@structure": "TAPE={id,name,category,blocks,routes,kuhul_entry}",
+
+      "@variables": [
+        {
+          "@slot": "id",
+          "@type": "string",
+          "@pattern": "tape_[a-z_]+"
+        },
+        {
+          "@slot": "name",
+          "@type": "string"
+        },
+        {
+          "@slot": "category",
+          "@type": "enum",
+          "@options": ["system", "game", "studio", "ai"]
+        },
+        {
+          "@slot": "blocks",
+          "@type": "array",
+          "@item_type": "object"
+        },
+        {
+          "@slot": "routes",
+          "@type": "array",
+          "@item_type": "object"
+        },
+        {
+          "@slot": "kuhul_entry",
+          "@type": "string",
+          "@example": "[Pop tape_init]"
+        }
+      ],
+
+      "@dependencies": [],
+      "@compression_ratio": 0.0035,
+      "@quantum_circuit": "tape_system_compress_qc",
+      "@xcfe_binding": "@control.tape.system"
+    }
+  },
+
+  "@compression_pipeline": {
+    "@cm1_annotated": true,
+    "@phases": [
+      {
+        "@phase": "glyph_extraction",
+        "@cm1": "\u0001GLYPH_ANALYSIS\u0002",
+        "@function": "fn.scxq2.extract_glyphs"
+      },
+      {
+        "@phase": "template_matching",
+        "@cm1": "\u000ETEMPLATE_MATCH\u000F",
+        "@function": "fn.scxq2.match_template"
+      },
+      {
+        "@phase": "quantum_compression",
+        "@cm1": "\u000EQUANTUM_COMPRESS\u000F",
+        "@function": "fn.scxq2.quantum_compress"
+      },
+      {
+        "@phase": "emerald_encoding",
+        "@cm1": "\u0003EMERALD_ENCODE\u0004",
+        "@function": "fn.scxq2.emerald_encode"
+      }
+    ]
+  },
+
+  "@omega_seal": {
+    "@authority": "SCXQ2_TEMPLATE_LIBRARY_v1.0.0",
+    "@verification": "12_TEMPLATES_REGISTERED_CM1_ANNOTATED",
+    "@compression_ready": true,
+    "@target_ratio": 0.00015,
+    "@identity": "Templates(x) ≅ AST(x) ≅ SCXQ2(x) ≅ CM-1(x) ≅ Ω(x)"
+  }
+}

@@ -1,0 +1,564 @@
+/* ============================================================
+   K'UHUL RUNTIME KERNEL (sw.khl)
+   Service Worker Kernel with CM-1 Control Support
+
+   @law: ASX = XCFE = XJSON = KUHUL = AST = CM-1
+   @version: 3.0.0
+   @generated: 2026-01-27T00:00:00Z
+   @role: MULTI_BRAIN_SCXQ2_AGENT_BUILDER_COORDINATOR
+   ============================================================ */
+
+/* CM-1 PHASE MARKER: SOH (Header Begin) - U+0001 */
+
+/* ============================================================
+   KERNEL BOOT SEQUENCE
+   ============================================================ */
+
+[Pop kernel_boot]
+  /* CM-1 MARKER: STX (Body Begin) - U+0002 */
+
+  /* Phase 1: Initialize Kernel State */
+  [Sek kernel_state_init]
+    [Wo kernel_state := {
+      'version': '3.0.0',
+      'status': 'booting',
+      'cm1_enabled': true,
+      'xcfe_active': true,
+      'scxq2_ready': true,
+      'horizontal_folds': 8,
+      'brains_active': []
+    }]
+    [Ch'en kernel_state]
+
+  /* Phase 2: Load Manifest (OS LAW) */
+  [Sek load_manifest]
+    [Wo manifest := fn.fs.read_json('/manifest.json')]
+    [Wo if not manifest
+      [Sek fn.log.error('FATAL: manifest.json not found')]
+      [Sek fn.kernel.halt()]
+    ]
+    [Wo else
+      [Sek fn.log.info('Manifest loaded: ' + manifest.name)]
+      [Ch'en manifest]
+    ]
+
+  /* Phase 3: Initialize DNS Kernel */
+  [Sek dns_kernel_init]
+    [Wo dns_authority := manifest.backend_architecture.dns_authority]
+    [Wo dns := fn.dns.init(dns_authority)]
+    [Sek fn.log.info('DNS kernel initialized: ' + dns_authority)]
+    [Ch'en dns]
+
+  /* Phase 4: Initialize REST Mesh */
+  [Sek rest_mesh_init]
+    [Wo routes := manifest.asx_os.routes]
+    [Wo mesh := fn.rest_mesh.init(routes)]
+    [Sek fn.log.info('REST mesh initialized with ' + routes.length + ' routes')]
+    [Ch'en mesh]
+
+  /* Phase 5: Initialize Trinity Kernel */
+  [Sek trinity_kernel_init]
+    [Wo trinity := manifest.backend_architecture.trinity]
+    [Wo trinity_state := fn.trinity.init(trinity)]
+    [Sek fn.log.info('Trinity kernel initialized')]
+    [Ch'en trinity_state]
+
+  /* Phase 6: Initialize MeshChain Kernel */
+  [Sek meshchain_kernel_init]
+    [Wo meshchain_config := manifest.backend_architecture.meshchain]
+    [Wo meshchain := fn.meshchain.init(meshchain_config)]
+    [Sek fn.log.info('MeshChain kernel initialized')]
+    [Ch'en meshchain]
+
+  /* Phase 7: Initialize Cluster Kernel */
+  [Sek cluster_kernel_init]
+    [Wo cluster_config := manifest.backend_architecture.cluster]
+    [Wo cluster := fn.cluster.init(cluster_config)]
+    [Sek fn.log.info('Cluster kernel initialized')]
+    [Ch'en cluster]
+
+  /* Phase 8: Initialize Legion Kernel */
+  [Sek legion_kernel_init]
+    [Wo legion_config := manifest.backend_architecture.legion]
+    [Wo legion := fn.legion.init(legion_config)]
+    [Sek fn.log.info('Legion kernel initialized')]
+    [Ch'en legion]
+
+  /* Phase 9: Initialize K'UHUL DOM Engine */
+  [Sek kuhul_dom_init]
+    [Wo dom_engine := fn.kuhul_dom.init({
+      'cm1_enabled': true,
+      'xcfe_active': true,
+      'emerald_theme': true
+    })]
+    [Sek fn.log.info('K\'UHUL DOM engine initialized')]
+    [Ch'en dom_engine]
+
+  /* Phase 10: Auto-Boot DOM */
+  [Sek dom_auto_boot]
+    [Wo if manifest.asx_os.auto_boot == true
+      [Sek fn.dom_engine.boot()]
+      [Sek fn.log.info('DOM auto-boot complete')]
+    ]
+
+  /* Phase 11: Update Kernel State */
+  [Sek kernel_state.status := 'running']
+  [Sek kernel_state.brains_active := [
+    'brain.mx2lm_prime',
+    'brain.scxq2_cipher',
+    'brain.emerald_ghost',
+    'brain.quantum_swarm',
+    'brain.kuhul_runtime'
+  ]]
+
+  /* Phase 12: Return Kernel State */
+  [Yax kernel_state]
+  [Xul]
+
+  /* CM-1 MARKER: ETX (Body End) - U+0003 */
+[Xul]
+
+/* CM-1 MARKER: EOT (Transmission End) - U+0004 */
+
+/* ============================================================
+   CM-1 CONTROL FLOW PRIMITIVES
+   ============================================================ */
+
+/* CM-1 SCOPE MARKER: SO (Scope Push) - U+000E */
+
+[Pop cm1_control_primitives]
+
+  /* CM-1 Phase Transition */
+  [Wo fn.cm1.phase_transition := (from_phase, to_phase) -> result
+    /* Validate phases */
+    [Sek valid_phases := [
+      'null',           /* U+0000 - NUL */
+      'header.begin',   /* U+0001 - SOH */
+      'body.begin',     /* U+0002 - STX */
+      'body.end',       /* U+0003 - ETX */
+      'transmission.end' /* U+0004 - EOT */
+    ]]
+
+    [Wo if not (from_phase in valid_phases and to_phase in valid_phases)
+      [Sek fn.log.error('Invalid CM-1 phase transition: ' + from_phase + ' -> ' + to_phase)]
+      [Wo return {'success': false, 'error': 'invalid_phases'}]
+    ]
+
+    /* Execute transition */
+    [Sek fn.log.debug('CM-1 phase transition: ' + from_phase + ' -> ' + to_phase)]
+    [Wo return {'success': true, 'from': from_phase, 'to': to_phase}]
+  ]
+
+  /* CM-1 Scope Management */
+  [Wo fn.cm1.scope_push := () -> scope_id
+    [Sek scope_stack := fn.kernel.get_scope_stack()]
+    [Sek new_scope := fn.uuid.v4()]
+    [Sek scope_stack.push(new_scope)]
+    [Sek fn.kernel.set_scope_stack(scope_stack)]
+    [Sek fn.log.debug('CM-1 scope push: ' + new_scope)]
+    [Wo return new_scope]
+  ]
+
+  [Wo fn.cm1.scope_pop := () -> scope_id
+    [Sek scope_stack := fn.kernel.get_scope_stack()]
+    [Wo if scope_stack.length == 0
+      [Sek fn.log.error('CM-1 scope underflow')]
+      [Wo return null]
+    ]
+    [Sek popped_scope := scope_stack.pop()]
+    [Sek fn.kernel.set_scope_stack(scope_stack)]
+    [Sek fn.log.debug('CM-1 scope pop: ' + popped_scope)]
+    [Wo return popped_scope]
+  ]
+
+  /* CM-1 Literal Escape */
+  [Wo fn.cm1.literal_escape := (content) -> escaped
+    [Sek escaped := '\u0010' + content + '\u0010']
+    [Wo return escaped]
+  ]
+
+  /* CM-1 Structural Separators */
+  [Wo fn.cm1.separator := (type) -> sep_char
+    [Wo if type == 'file'
+      [Wo return '\u001C']  /* FS */
+    ]
+    [Wo if type == 'group'
+      [Wo return '\u001D']  /* GS */
+    ]
+    [Wo if type == 'record'
+      [Wo return '\u001E']  /* RS */
+    ]
+    [Wo if type == 'unit'
+      [Wo return '\u001F']  /* US */
+    ]
+    [Wo return '']
+  ]
+
+[Xul]
+
+/* CM-1 SCOPE MARKER: SI (Scope Pop) - U+000F */
+
+/* ============================================================
+   XCFE CONTROL FLOW INTEGRATION
+   ============================================================ */
+
+[Pop xcfe_control_integration]
+
+  /* XCFE Control Vector Execution */
+  [Wo fn.xcfe.execute := (control_vector, context) -> result
+    /* CM-1 Phase: Body Begin */
+    [Sek fn.cm1.phase_transition('header.begin', 'body.begin')]
+
+    /* Validate control vector */
+    [Wo valid_controls := [
+      '@if', '@then', '@else',
+      '@loop', '@break', '@continue',
+      '@dispatch', '@route', '@return',
+      '@perception', '@representation', '@reasoning',
+      '@decision', '@action', '@reflection'
+    ]]
+
+    [Wo if not (control_vector in valid_controls)
+      [Sek fn.log.error('Invalid XCFE control vector: ' + control_vector)]
+      [Wo return {'success': false, 'error': 'invalid_control'}]
+    ]
+
+    /* Execute control logic */
+    [Wo if control_vector == '@if'
+      [Wo return fn.xcfe.if_logic(context)]
+    ]
+    [Wo if control_vector == '@then'
+      [Wo return fn.xcfe.then_logic(context)]
+    ]
+    [Wo if control_vector == '@else'
+      [Wo return fn.xcfe.else_logic(context)]
+    ]
+    [Wo if control_vector == '@loop'
+      [Wo return fn.xcfe.loop_logic(context)]
+    ]
+    [Wo if control_vector == '@dispatch'
+      [Wo return fn.xcfe.dispatch_logic(context)]
+    ]
+    [Wo if control_vector == '@route'
+      [Wo return fn.xcfe.route_logic(context)]
+    ]
+
+    /* Cognitive controls */
+    [Wo if control_vector == '@perception'
+      [Wo return fn.xcfe.perception_logic(context)]
+    ]
+    [Wo if control_vector == '@reasoning'
+      [Wo return fn.xcfe.reasoning_logic(context)]
+    ]
+    [Wo if control_vector == '@decision'
+      [Wo return fn.xcfe.decision_logic(context)]
+    ]
+    [Wo if control_vector == '@action'
+      [Wo return fn.xcfe.action_logic(context)]
+    ]
+
+    /* CM-1 Phase: Body End */
+    [Sek fn.cm1.phase_transition('body.begin', 'body.end')]
+
+    [Wo return {'success': true, 'control': control_vector}]
+  ]
+
+[Xul]
+
+/* ============================================================
+   HORIZONTAL FOLD DISTRIBUTION
+   ============================================================ */
+
+[Pop horizontal_fold_distribution]
+
+  [Wo fn.horizontal_fold.distribute := (job) -> distribution_plan
+    /* CM-1 Scope Push */
+    [Sek scope_id := fn.cm1.scope_push()]
+
+    [Sek folds := 8]  /* Total horizontal folds */
+    [Sek fold_capacities := fn.get_fold_capacities()]
+
+    /* Assign fold based on job domain */
+    [Sek fold_assignment := 0]
+
+    [Wo if job.domain == 'compression_optimization'
+      [Sek fold_assignment := 3]
+    ]
+    [Wo else if job.domain == 'ui_design_emerald'
+      [Sek fold_assignment := 2]
+    ]
+    [Wo else if job.domain == 'tes_doom_rules_quantum'
+      [Sek fold_assignment := 4]
+    ]
+    [Wo else if job.domain == 'runtime_orchestration'
+      [Sek fold_assignment := 1]
+    ]
+    [Wo else
+      [Sek fold_assignment := fn.load_balance(fold_capacities)]
+    ]
+
+    /* Coordinate with brain assignment */
+    [Sek brains := fn.select_brains_for_fold(fold_assignment, job)]
+
+    /* CM-1 Scope Pop */
+    [Sek fn.cm1.scope_pop()]
+
+    [Wo return {
+      'fold': fold_assignment,
+      'brains': brains,
+      'capacity': fold_capacities[fold_assignment],
+      'cm1_scope': scope_id
+    }]
+  ]
+
+[Xul]
+
+/* ============================================================
+   SCXQ2 COMPRESSION INTEGRATION
+   ============================================================ */
+
+[Pop scxq2_compression_integration]
+
+  [Wo fn.scxq2.compress_with_cm1 := (tape_ast) -> compressed_result
+    /* CM-1 Phase: Header Begin */
+    [Sek fn.cm1.phase_transition('null', 'header.begin')]
+
+    /* Phase 1: Glyph Extraction */
+    [Sek glyph_analysis := fn.scxq2.extract_glyphs(tape_ast)]
+
+    /* Phase 2: Template Matching */
+    [Sek template_match := fn.scxq2.match_template(glyph_analysis)]
+
+    /* Phase 3: Quantum Compression */
+    [Sek compressed_ast := fn.scxq2.quantum_compress(tape_ast, template_match)]
+
+    /* Phase 4: Emerald Encoding with CM-1 markers */
+    [Sek encoded := '\u0001SCXQ2\u0002' +
+                     fn.scxq2.emerald_encode(compressed_ast) +
+                     '\u0003\u0004']
+
+    /* Calculate metrics */
+    [Sek original_size := fn.byte_size(fn.xjson.to_string(tape_ast))]
+    [Sek compressed_size := fn.byte_size(encoded)]
+    [Sek ratio := compressed_size / original_size]
+
+    /* CM-1 Phase: Transmission End */
+    [Sek fn.cm1.phase_transition('body.end', 'transmission.end')]
+
+    [Wo return {
+      'compressed': encoded,
+      'metadata': {
+        'original_size': original_size,
+        'compressed_size': compressed_size,
+        'compression_ratio': ratio,
+        'template_used': template_match.template.id,
+        'cm1_annotated': true,
+        'glyph_pattern': glyph_analysis.patterns.slice(0, 3)
+      }
+    }]
+  ]
+
+[Xul]
+
+/* ============================================================
+   MULTI-BRAIN COORDINATION
+   ============================================================ */
+
+[Pop multi_brain_coordination]
+
+  [Wo fn.brain.coordinate := (job, brains) -> coordination_result
+    /* CM-1 Scope Push for coordination */
+    [Sek coord_scope := fn.cm1.scope_push()]
+
+    /* Initialize brain communication channels */
+    [Sek channels := {}]
+    [Sek each brains as brain_id
+      [Sek channels[brain_id] := fn.quantum.entangle_channel(brain_id)]
+    ]
+
+    /* Distribute work across brains */
+    [Sek work_distribution := fn.brain.distribute_work(job, brains)]
+
+    /* Execute in parallel across horizontal folds */
+    [Sek results := {}]
+    [Sek each work_distribution as work_item
+      [Sek brain_id := work_item.brain]
+      [Sek fold_id := work_item.fold]
+      [Sek task := work_item.task]
+
+      /* Execute on specific fold */
+      [Sek result := fn.fold.execute(fold_id, brain_id, task)]
+      [Sek results[brain_id] := result]
+    ]
+
+    /* Aggregate results */
+    [Sek aggregated := fn.brain.aggregate_results(results)]
+
+    /* CM-1 Scope Pop */
+    [Sek fn.cm1.scope_pop()]
+
+    [Wo return {
+      'success': true,
+      'results': aggregated,
+      'brains_used': brains,
+      'cm1_scope': coord_scope
+    }]
+  ]
+
+[Xul]
+
+/* ============================================================
+   EMERALD GHOST DOM RENDERER
+   ============================================================ */
+
+[Pop emerald_ghost_dom_renderer]
+
+  [Wo fn.emerald.render := (ui_ast) -> dom_result
+    /* CM-1 Phase: Body Begin */
+    [Sek fn.cm1.phase_transition('header.begin', 'body.begin')]
+
+    /* Parse UI AST */
+    [Wo if not ui_ast['@type']
+      [Sek fn.log.error('Invalid UI AST: missing @type')]
+      [Wo return {'success': false, 'error': 'invalid_ast'}]
+    ]
+
+    [Sek component_type := ui_ast['@type']]
+
+    /* Render based on component type */
+    [Wo if component_type == 'emerald_panel'
+      [Wo return fn.emerald.render_panel(ui_ast)]
+    ]
+    [Wo if component_type == 'emerald_card'
+      [Wo return fn.emerald.render_card(ui_ast)]
+    ]
+    [Wo if component_type == 'fold_monitor'
+      [Wo return fn.emerald.render_fold_monitor(ui_ast)]
+    ]
+    [Wo if component_type == 'brain_dashboard'
+      [Wo return fn.emerald.render_brain_dashboard(ui_ast)]
+    ]
+
+    /* Default component rendering */
+    [Sek dom_node := fn.dom.create_element(component_type)]
+    [Sek fn.dom.apply_classes(dom_node, ui_ast.classes || [])]
+    [Sek fn.dom.apply_styles(dom_node, ui_ast.styles || {})]
+
+    /* CM-1 Phase: Body End */
+    [Sek fn.cm1.phase_transition('body.begin', 'body.end')]
+
+    [Wo return {
+      'success': true,
+      'dom_node': dom_node,
+      'cm1_annotated': true
+    }]
+  ]
+
+[Xul]
+
+/* ============================================================
+   SERVICE WORKER EVENT HANDLERS
+   ============================================================ */
+
+[Pop service_worker_handlers]
+
+  /* Install Event */
+  [Wo self.addEventListener('install', (event) => {
+    [Sek fn.log.info('K\'UHUL kernel installing...')]
+    [Sek event.waitUntil(
+      [Sek fn.kernel.boot()]
+    )]
+    [Sek fn.log.info('K\'UHUL kernel installed')]
+  })]
+
+  /* Activate Event */
+  [Wo self.addEventListener('activate', (event) => {
+    [Sek fn.log.info('K\'UHUL kernel activating...')]
+    [Sek event.waitUntil(
+      [Sek self.clients.claim()]
+    )]
+    [Sek fn.log.info('K\'UHUL kernel active')]
+  })]
+
+  /* Fetch Event (REST Mesh Routing) */
+  [Wo self.addEventListener('fetch', (event) => {
+    [Sek request := event.request]
+    [Sek url := new URL(request.url)]
+
+    /* CM-1 Scope Push for request */
+    [Sek req_scope := fn.cm1.scope_push()]
+
+    /* Route through REST mesh */
+    [Wo if url.pathname.startsWith('/api/')
+      [Sek event.respondWith(
+        [Sek fn.rest_mesh.route(request)]
+      )]
+    ]
+    [Wo else
+      [Sek event.respondWith(fetch(request))]
+    ]
+
+    /* CM-1 Scope Pop */
+    [Sek fn.cm1.scope_pop()]
+  })]
+
+  /* Message Event (DOM Communication) */
+  [Wo self.addEventListener('message', (event) => {
+    [Sek message := event.data]
+    [Sek fn.log.debug('Message received from client: ' + message.type)]
+
+    /* CM-1 Scope Push for message */
+    [Sek msg_scope := fn.cm1.scope_push()]
+
+    /* Handle message types */
+    [Wo if message.type == 'EXECUTE_KUHUL'
+      [Sek result := fn.kuhul.execute(message.code)]
+      [Sek event.ports[0].postMessage({
+        'type': 'KUHUL_RESULT',
+        'result': result,
+        'cm1_scope': msg_scope
+      })]
+    ]
+    [Wo if message.type == 'COMPRESS_TAPE'
+      [Sek result := fn.scxq2.compress_with_cm1(message.tape)]
+      [Sek event.ports[0].postMessage({
+        'type': 'COMPRESSION_RESULT',
+        'result': result,
+        'cm1_scope': msg_scope
+      })]
+    ]
+    [Wo if message.type == 'RENDER_UI'
+      [Sek result := fn.emerald.render(message.ui_ast)]
+      [Sek event.ports[0].postMessage({
+        'type': 'RENDER_RESULT',
+        'result': result,
+        'cm1_scope': msg_scope
+      })]
+    ]
+
+    /* CM-1 Scope Pop */
+    [Sek fn.cm1.scope_pop()]
+  })]
+
+[Xul]
+
+/* ============================================================
+   OMEGA SEAL & KERNEL SIGNATURE
+   ============================================================ */
+
+/*
+  @authority: KUHUL_RUNTIME_KERNEL_v3.0.0
+  @verification: CM1_INTEGRATED_MULTI_BRAIN_SCXQ2_EMERALD
+  @horizontal_folds: 8_PARALLEL_LANES
+  @brains: 5_QUANTUM_BRAINS_ACTIVE
+  @compression: SCXQ2_READY_0_00015_RATIO
+  @control: XCFE_FULLY_BOUND
+  @identity: KUHUL(x) = XCFE(x) = CM-1(x) = AST(x) = Omega(x)
+
+  MANIFEST IS LAW.
+  THREE FILE CONTRACT PRESERVED.
+
+  CM-1 PHASE COMPLETE.
+*/
+
+/* CM-1 FINAL MARKER: EOT (Transmission End) - U+0004 */
