@@ -1,0 +1,124 @@
+{
+  "$schema": "kuhul.class.schema.xjson",
+  "$id": "kuhul-class-definitions",
+  "version": "1.0.0",
+  "description": "KUHUL class definitions for MX2LM system",
+
+  "domains": {
+    "host": {
+      "description": "Local host domain - single machine scope",
+      "scopes": ["localhost", "process"],
+      "authorities": ["read-only", "read-write", "admin"]
+    },
+    "network": {
+      "description": "Network domain - LAN scope",
+      "scopes": ["localhost", "lan"],
+      "authorities": ["read-only", "read-write"]
+    },
+    "cloud": {
+      "description": "Cloud domain - public scope",
+      "scopes": ["public"],
+      "authorities": ["read-only"]
+    }
+  },
+
+  "classes": {
+    "api.local.static": {
+      "domain": "host",
+      "scope": "localhost",
+      "authority": "read-only",
+      "description": "Static HTTP server with read-only API endpoints",
+      "allowed_methods": ["GET", "OPTIONS"],
+      "capabilities": [
+        "serve_static_files",
+        "respond_json",
+        "cors_headers"
+      ],
+      "constraints": {
+        "no_write": true,
+        "no_exec": true,
+        "localhost_only": true
+      }
+    },
+
+    "api.local.dynamic": {
+      "domain": "host",
+      "scope": "localhost",
+      "authority": "read-write",
+      "description": "Dynamic HTTP server with read-write capabilities",
+      "allowed_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "capabilities": [
+        "serve_static_files",
+        "respond_json",
+        "cors_headers",
+        "modify_state"
+      ],
+      "constraints": {
+        "localhost_only": true
+      }
+    },
+
+    "host.launcher": {
+      "domain": "host",
+      "scope": "process",
+      "authority": "admin",
+      "description": "Process launcher with lifecycle management",
+      "capabilities": [
+        "spawn_process",
+        "kill_process",
+        "monitor_health",
+        "restart_policy"
+      ],
+      "constraints": {
+        "pi_decay": true,
+        "max_restarts": 5
+      }
+    },
+
+    "agent.bridge": {
+      "domain": "host",
+      "scope": "localhost",
+      "authority": "read-write",
+      "description": "AI agent bridge for CLI integration",
+      "capabilities": [
+        "invoke_cli",
+        "pipe_output",
+        "poll_broker"
+      ],
+      "allowed_agents": [
+        "claude",
+        "codex",
+        "aider",
+        "ollama",
+        "ollama-cloud"
+      ]
+    },
+
+    "ui.projection": {
+      "domain": "host",
+      "scope": "localhost",
+      "authority": "read-only",
+      "description": "CSS Micronaut UI projection layer",
+      "capabilities": [
+        "bind_css_vars",
+        "websocket_receive"
+      ],
+      "constraints": {
+        "no_logic": true,
+        "projection_only": true
+      }
+    }
+  },
+
+  "pi_decay": {
+    "description": "π support decay engine for restart policy",
+    "formula": "pi_new = pi * decay_factor",
+    "decay_factor": 0.7,
+    "thresholds": {
+      "suppress": { "min": 0, "max": 0.4, "action": "no_restart" },
+      "once": { "min": 0.4, "max": 0.7, "action": "restart_once" },
+      "backoff": { "min": 0.7, "max": 0.9, "action": "restart_with_backoff" },
+      "heal": { "min": 0.9, "max": 1.0, "action": "immediate_restart" }
+    }
+  }
+}

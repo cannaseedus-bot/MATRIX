@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MX2LM Server</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --fg: #e0e0e0;
+            --accent: #00d4aa;
+            --dim: #555;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+        .subtitle {
+            color: var(--dim);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        .status {
+            background: rgba(0, 212, 170, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .status-row:last-child { border-bottom: none; }
+        .status-label { color: var(--dim); }
+        .status-value { color: var(--accent); font-family: monospace; }
+        .endpoints {
+            text-align: left;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        .endpoints h3 {
+            margin-bottom: 1rem;
+            color: var(--dim);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .endpoint {
+            font-family: monospace;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background: rgba(0, 212, 170, 0.05);
+            border-radius: 4px;
+        }
+        .endpoint a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .endpoint a:hover { text-decoration: underline; }
+        .kuhul-badge {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--dim);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MX2LM Server</h1>
+        <p class="subtitle">KUHUL-Governed Static Server</p>
+
+        <div class="status" id="status">
+            <div class="status-row">
+                <span class="status-label">Status</span>
+                <span class="status-value" id="health">Loading...</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Uptime</span>
+                <span class="status-value" id="uptime">-</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Requests</span>
+                <span class="status-value" id="requests">-</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">KUHUL Class</span>
+                <span class="status-value" id="kuhul-class">api.local.static</span>
+            </div>
+        </div>
+
+        <div class="endpoints">
+            <h3>API Endpoints</h3>
+            <div class="endpoint"><a href="/status">/status</a> - Server status</div>
+            <div class="endpoint"><a href="/health">/health</a> - Health check</div>
+            <div class="endpoint"><a href="/api/agents">/api/agents</a> - AI agents list</div>
+            <div class="endpoint"><a href="/api/models">/api/models</a> - Ollama models</div>
+        </div>
+
+        <div class="kuhul-badge">
+            Domain: host | Scope: localhost | Authority: read-only
+        </div>
+    </div>
+
+    <script>
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/status');
+                const data = await res.json();
+
+                document.getElementById('health').textContent = data.status || 'ok';
+                document.getElementById('uptime').textContent = data.uptime + 's';
+                document.getElementById('requests').textContent = data.requests;
+                document.getElementById('kuhul-class').textContent = data.kuhul_class;
+            } catch (e) {
+                document.getElementById('health').textContent = 'Error';
+            }
+        }
+
+        fetchStatus();
+        setInterval(fetchStatus, 5000);
+    </script>
+</body>
+</html>

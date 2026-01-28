@@ -10,6 +10,7 @@
 - **Python Agent** - Bridges broker to AI code agents (Claude, Codex, Aider, Ollama)
 - **PWA Frontend** - Web interface for managing tasks
 - **MX2LM CLI** - KUHUL-controlled host orchestrator
+- **PowerShell Server** - Static file server with API endpoints (Windows)
 
 ## Quick Start
 
@@ -123,7 +124,11 @@ MATRIX/
 │
 ├── cli/                    # MX2LM CLI
 │   ├── server.khl          # Server runtime
-│   ├── server/             # CLI module
+│   ├── server/             # CLI module (Node.js)
+│   ├── powershell/         # PowerShell static server
+│   │   ├── server.ps1      # Main server script
+│   │   ├── start-server.bat# Windows launcher
+│   │   └── public/         # Static files root
 │   └── ui/                 # CSS Micronaut UI
 │
 ├── pwa/                    # Progressive Web App
@@ -137,6 +142,7 @@ MATRIX/
 │
 ├── specs/                  # Language Specifications
 │   ├── mxs/                # MXS stylesheets
+│   ├── kuhul/              # KUHUL class definitions
 │   └── server/             # Server schemas
 │
 ├── inference/              # Inference Plains
@@ -209,6 +215,29 @@ node cli/server/index.js status
 | `> 0.9`   | Immediate heal       |
 
 See [docs/mx2lm-cli.md](docs/mx2lm-cli.md) for full specification.
+
+## PowerShell Static Server
+
+KUHUL-governed static file server for Windows:
+
+```powershell
+# Start server on port 8080
+.\cli\powershell\server.ps1 -Port 8080 -Root "./public"
+
+# Or use the batch launcher
+.\cli\powershell\start-server.bat -port 8080
+```
+
+| Endpoint         | Description              |
+|------------------|--------------------------|
+| `/`              | Server status (JSON)     |
+| `/status`        | Server status            |
+| `/health`        | Health check             |
+| `/api/agents`    | AI agents list           |
+| `/api/models`    | Ollama models            |
+| `/*`             | Static files from root   |
+
+KUHUL Class: `api.local.static` (read-only, localhost only)
 
 ## Architecture
 
