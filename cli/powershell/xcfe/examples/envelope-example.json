@@ -1,0 +1,22 @@
+{
+  "@xcfe": "ps-envelope.v1",
+  "@control": {
+    "phase": "delegate.external",
+    "target": "powershell",
+    "audit": true
+  },
+  "@capability": {
+    "powershell": true,
+    "interactive": false,
+    "network": false,
+    "filesystem": "read-only"
+  },
+  "@intent": {
+    "@dsl": "ps-dsl.v1",
+    "action": "process.list",
+    "params": {}
+  },
+  "@constraints": {
+    "max_output_kb": 512
+  }
+}

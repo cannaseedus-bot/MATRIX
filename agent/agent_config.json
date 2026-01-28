@@ -11,5 +11,8 @@
 
   "ai_agent": "claude",
   "ai_agent_path": "",
-  "working_dir": ""
+  "working_dir": "",
+
+  "ollama_model": "llama3.2",
+  "ollama_host": "http://localhost:11434"
 }
