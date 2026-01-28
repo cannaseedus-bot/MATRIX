@@ -1,0 +1,91 @@
+{
+  "$schema": "xjson://schema/core/v1",
+  "@id": "mx2lm://schema/server-runtime/v1",
+  "@kind": "schema",
+  "@purpose": "MX2LM local server runtime definition",
+  "@invariants": [
+    "localhost-only",
+    "read-only",
+    "no-process-spawn",
+    "cli-launched",
+    "kuhul-governed"
+  ],
+  "type": "object",
+  "required": ["runtime", "server", "endpoints"],
+  "properties": {
+    "runtime": {
+      "const": "mx2lm.server.v1"
+    },
+    "server": {
+      "type": "object",
+      "required": ["host", "port"],
+      "properties": {
+        "host": {
+          "enum": ["127.0.0.1", "localhost"]
+        },
+        "port": {
+          "type": "number",
+          "minimum": 1024,
+          "maximum": 65535
+        },
+        "protocol": {
+          "enum": ["http", "http+ws"]
+        },
+        "mode": {
+          "enum": ["static", "static+status", "static+status+ws"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "uptime": {
+          "type": "number",
+          "minimum": 0
+        },
+        "requests": {
+          "type": "number",
+          "minimum": 0
+        },
+        "healthy": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["method", "path"],
+        "properties": {
+          "method": {
+            "enum": ["GET"]
+          },
+          "path": {
+            "pattern": "^/[a-zA-Z0-9/_-]*$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "websockets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": {
+            "pattern": "^/ws/[a-zA-Z0-9/_-]*$"
+          },
+          "direction": {
+            "enum": ["server-to-client"]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
