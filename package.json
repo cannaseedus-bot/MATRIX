@@ -14,5 +14,8 @@
     "gpu",
     "spec",
     "stylesheet"
-  ]
+  ],
+  "dependencies": {
+    "kuhul-es": "^1.0.18"
+  }
 }
