@@ -5,8 +5,14 @@
  * Connects brain-mesh orchestrator to kuhul-bridge for
  * monitored, self-healing KUHUL execution.
  *
+ * Features:
+ * - Adaptive brain scoring with multi-armed bandit selection
+ * - Automatic best-brain routing per domain
+ * - Brain promotion/demotion based on performance
+ * - State persistence for continuous learning
+ *
  * @law ASX = XCFE = XJSON = KUHUL = AST = CM-1
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 'use strict';
@@ -223,16 +229,59 @@ function createServer(runtime, port = 5002) {
         await runtime.orchestrator.processErrorQueue();
         json({ success: true, remaining: runtime.orchestrator.errorQueue.length });
 
+      // Adaptive routing endpoints
+      } else if (pathname === '/adaptive/leaderboard' && req.method === 'GET') {
+        const leaderboard = runtime.orchestrator.getBrainLeaderboard();
+        json(leaderboard);
+
+      } else if (pathname === '/adaptive/stats' && req.method === 'GET') {
+        const stats = runtime.orchestrator.getAdaptiveStats();
+        json(stats);
+
+      } else if (pathname === '/adaptive/best' && req.method === 'GET') {
+        const domain = url.searchParams.get('domain') || 'general';
+        const best = runtime.orchestrator.getBestBrainForDomain(domain);
+        json(best ? {
+          id: best.id,
+          label: best['@label'],
+          score: best.score,
+          tier: best.tier,
+        } : { error: 'No brain found for domain' });
+
+      } else if (pathname === '/adaptive/reset' && req.method === 'POST') {
+        runtime.orchestrator.resetScores();
+        json({ success: true, message: 'Scores reset' });
+
+      } else if (pathname === '/adaptive/save' && req.method === 'POST') {
+        const body = await parseBody();
+        const filepath = body.filepath || './brain-mesh-state.json';
+        runtime.orchestrator.saveStateToFile(filepath);
+        json({ success: true, filepath });
+
+      } else if (pathname === '/adaptive/load' && req.method === 'POST') {
+        const body = await parseBody();
+        const filepath = body.filepath || './brain-mesh-state.json';
+        const success = runtime.orchestrator.loadStateFromFile(filepath);
+        json({ success, filepath });
+
       } else {
         json({ error: 'Not found', endpoints: [
-          'GET /status',
-          'GET /brains',
-          'GET /efficiency',
+          'GET  /status',
+          'GET  /brains',
+          'GET  /efficiency',
           'POST /execute { file | task }',
           'POST /task { domain, operation, args }',
           'POST /cm1/phase { from, to, context }',
           'POST /cm1/scope { action, scopeId }',
           'POST /errors/process',
+          '',
+          '# Adaptive Routing',
+          'GET  /adaptive/leaderboard',
+          'GET  /adaptive/stats',
+          'GET  /adaptive/best?domain=<domain>',
+          'POST /adaptive/reset',
+          'POST /adaptive/save { filepath }',
+          'POST /adaptive/load { filepath }',
         ]}, 404);
       }
 
@@ -326,6 +375,72 @@ async function cli() {
       break;
     }
 
+    // Adaptive routing commands
+    case 'leaderboard':
+    case 'lb': {
+      const leaderboard = runtime.orchestrator.getBrainLeaderboard();
+      console.log('\n┌───────────────────────────────────────────────────────────────────┐');
+      console.log('│                    BRAIN LEADERBOARD                              │');
+      console.log('├──────┬────────────────────┬─────────┬──────────┬─────────┬────────┤');
+      console.log('│ Rank │ Brain              │ Score   │ Tier     │ Success │ Execs  │');
+      console.log('├──────┼────────────────────┼─────────┼──────────┼─────────┼────────┤');
+      leaderboard.forEach(b => {
+        const tierIcon = { promoted: '★', standard: '○', demoted: '✗' }[b.tier] || '?';
+        console.log(
+          `│ ${String(b.rank).padStart(4)} │ ${b.label.padEnd(18).slice(0, 18)} │ ${b.score.toFixed(3).padStart(7)} │ ${tierIcon} ${b.tier.padEnd(7)} │ ${(b.successRate * 100).toFixed(1).padStart(6)}% │ ${String(b.totalExecutions).padStart(6)} │`
+        );
+      });
+      console.log('└──────┴────────────────────┴─────────┴──────────┴─────────┴────────┘');
+      break;
+    }
+
+    case 'adaptive':
+    case 'stats': {
+      const stats = runtime.orchestrator.getAdaptiveStats();
+      console.log('\nAdaptive Routing Stats:');
+      console.log(JSON.stringify(stats, null, 2));
+      break;
+    }
+
+    case 'best': {
+      const domain = args[1] || 'general';
+      const best = runtime.orchestrator.getBestBrainForDomain(domain);
+      if (best) {
+        console.log(`\nBest brain for "${domain}":`);
+        console.log(`  ID:    ${best.id}`);
+        console.log(`  Label: ${best['@label']}`);
+        console.log(`  Score: ${best.score.toFixed(3)}`);
+        console.log(`  Tier:  ${best.tier}`);
+      } else {
+        console.log(`No brain found for domain: ${domain}`);
+      }
+      break;
+    }
+
+    case 'save': {
+      const filepath = args[1] || './brain-mesh-state.json';
+      runtime.orchestrator.saveStateToFile(filepath);
+      console.log(`\nState saved to: ${filepath}`);
+      break;
+    }
+
+    case 'load': {
+      const filepath = args[1] || './brain-mesh-state.json';
+      const success = runtime.orchestrator.loadStateFromFile(filepath);
+      if (success) {
+        console.log(`\nState loaded from: ${filepath}`);
+      } else {
+        console.log(`\nFailed to load state from: ${filepath}`);
+      }
+      break;
+    }
+
+    case 'reset': {
+      runtime.orchestrator.resetScores();
+      console.log('\nBrain scores reset to defaults');
+      break;
+    }
+
     default:
       console.log(`Usage: brain-mesh <command> [args]
 
@@ -338,9 +453,18 @@ Commands:
   efficiency             Show efficiency metrics
   health                 Run health check
 
+Adaptive Routing:
+  leaderboard, lb        Show brain leaderboard (ranked by score)
+  adaptive, stats        Show adaptive routing statistics
+  best <domain>          Show best brain for a domain
+  save [filepath]        Save brain state to file
+  load [filepath]        Load brain state from file
+  reset                  Reset all brain scores
+
 Examples:
   node cli/brain-mesh serve 5002
-  node cli/brain-mesh execute cli/kuhul_runtime_kernel.khl
+  node cli/brain-mesh leaderboard
+  node cli/brain-mesh best ui_design_emerald
   node cli/brain-mesh task '{"domain":"ui_design_emerald","operation":"generate_css"}'
 `);
       break;

@@ -4,8 +4,14 @@
  * Monitors KUHUL execution via CM-1 events, detects failures,
  * routes to appropriate LLM for diagnosis, and injects fixes.
  *
+ * Features:
+ * - Adaptive brain scoring (multi-armed bandit)
+ * - Automatic best-brain selection per domain
+ * - Exploration/exploitation with epsilon-greedy
+ * - Brain promotion/demotion based on performance
+ *
  * @law ASX = XCFE = XJSON = KUHUL = AST = CM-1
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 'use strict';
@@ -71,7 +77,28 @@ class BrainMeshOrchestrator extends EventEmitter {
       agentHost: options.agentHost || AGENT_CONFIG.host,
       agentPort: options.agentPort || AGENT_CONFIG.port,
       agentToken: options.agentToken || AGENT_CONFIG.token,
+
+      // Adaptive scoring configuration
+      adaptiveRouting: options.adaptiveRouting !== false, // Enable by default
+      explorationRate: options.explorationRate || 0.1,    // 10% exploration
+      scoreDecay: options.scoreDecay || 0.95,             // Score decay factor
+      minSamples: options.minSamples || 3,                // Min samples before scoring
+      rollingWindowSize: options.rollingWindowSize || 50, // Recent executions to consider
+
+      // Score weights
+      scoreWeights: {
+        successRate: options.successWeight || 0.5,        // 50% weight
+        speed: options.speedWeight || 0.3,                // 30% weight
+        consistency: options.consistencyWeight || 0.2,    // 20% weight
+      },
+
+      // Promotion/demotion thresholds
+      promotionThreshold: options.promotionThreshold || 0.85,  // Promote if score > 85%
+      demotionThreshold: options.demotionThreshold || 0.4,     // Demote if score < 40%
     };
+
+    // Domain-to-brain performance tracking
+    this.domainBrainScores = new Map();
 
     // Initialize brains from registry
     this.loadBrains();
@@ -98,6 +125,16 @@ class BrainMeshOrchestrator extends EventEmitter {
         lastExecution: null,
         errorCount: 0,
         successCount: 0,
+
+        // Adaptive scoring fields
+        score: 0.5,                    // Initial neutral score
+        tier: 'standard',              // standard, promoted, demoted
+        recentExecutions: [],          // Rolling window of recent results
+        avgResponseTime: 0,            // Average response time
+        responseTimeVariance: 0,       // Consistency measure
+        totalExecutions: 0,            // Total executions for this brain
+        promotionCount: 0,             // Times promoted
+        demotionCount: 0,              // Times demoted
       });
     }
 
@@ -124,24 +161,347 @@ class BrainMeshOrchestrator extends EventEmitter {
 
   /**
    * Route task to appropriate brain based on domain
+   * Uses adaptive scoring when enabled
    */
   routeToBrain(domain) {
+    // Get candidate brains for this domain
+    const candidates = this.getCandidateBrains(domain);
+
+    if (candidates.length === 0) {
+      return this.brains.get('mx2lm_prime');
+    }
+
+    if (candidates.length === 1) {
+      return candidates[0];
+    }
+
+    // Use adaptive routing if enabled
+    if (this.config.adaptiveRouting) {
+      return this.selectBestBrain(domain, candidates);
+    }
+
+    // Fallback to first candidate (static routing)
+    return candidates[0];
+  }
+
+  /**
+   * Get candidate brains for a domain
+   */
+  getCandidateBrains(domain) {
     const rules = BRAINS_REGISTRY.routing_rules.domain_to_brain;
+    const candidates = [];
 
     // Direct domain match
     if (rules[domain]) {
-      return this.brains.get(rules[domain]);
+      const brain = this.brains.get(rules[domain]);
+      if (brain) candidates.push(brain);
     }
 
     // Pattern match (e.g., css.atomic.* → css_atomic)
     for (const [pattern, brainId] of Object.entries(rules)) {
       if (domain.startsWith(pattern.replace('*', ''))) {
-        return this.brains.get(brainId);
+        const brain = this.brains.get(brainId);
+        if (brain && !candidates.includes(brain)) {
+          candidates.push(brain);
+        }
       }
     }
 
-    // Default to orchestrator
-    return this.brains.get('mx2lm_prime');
+    // Add brains that list this domain in their capabilities
+    for (const [id, brain] of this.brains) {
+      const domains = brain['@domains'] || [];
+      if (domains.some(d => domain.includes(d) || d.includes(domain))) {
+        if (!candidates.includes(brain)) {
+          candidates.push(brain);
+        }
+      }
+    }
+
+    // Exclude demoted brains unless no alternatives
+    const nonDemoted = candidates.filter(b => b.tier !== 'demoted');
+    return nonDemoted.length > 0 ? nonDemoted : candidates;
+  }
+
+  /**
+   * Select best brain using adaptive scoring (epsilon-greedy)
+   */
+  selectBestBrain(domain, candidates) {
+    // Exploration: randomly select with probability epsilon
+    if (Math.random() < this.config.explorationRate) {
+      const randomBrain = candidates[Math.floor(Math.random() * candidates.length)];
+      this.log(`[Adaptive] Exploring: ${randomBrain.id} for ${domain}`, 'info');
+      return randomBrain;
+    }
+
+    // Exploitation: select highest-scoring brain
+    const domainKey = this.getDomainKey(domain);
+    const scores = this.domainBrainScores.get(domainKey) || new Map();
+
+    // Calculate effective scores for each candidate
+    const scoredCandidates = candidates.map(brain => {
+      const domainScore = scores.get(brain.id);
+      const effectiveScore = this.calculateEffectiveScore(brain, domainScore);
+      return { brain, effectiveScore };
+    });
+
+    // Sort by score (descending)
+    scoredCandidates.sort((a, b) => b.effectiveScore - a.effectiveScore);
+
+    const best = scoredCandidates[0];
+    this.log(`[Adaptive] Selected: ${best.brain.id} (score: ${best.effectiveScore.toFixed(3)}) for ${domain}`, 'info');
+
+    return best.brain;
+  }
+
+  /**
+   * Normalize domain key for score tracking
+   */
+  getDomainKey(domain) {
+    // Group similar domains (e.g., css.atomic.forge → css.atomic)
+    const parts = domain.split('.');
+    return parts.slice(0, 2).join('.');
+  }
+
+  /**
+   * Calculate effective score for brain selection
+   */
+  calculateEffectiveScore(brain, domainScore) {
+    // If not enough samples, use prior (0.5) with high uncertainty bonus
+    if (brain.totalExecutions < this.config.minSamples) {
+      // Upper Confidence Bound (UCB) style exploration bonus
+      const uncertaintyBonus = Math.sqrt(2 * Math.log(this.metrics.totalExecutions + 1) / (brain.totalExecutions + 1));
+      return 0.5 + uncertaintyBonus;
+    }
+
+    // Combine global brain score with domain-specific score
+    const globalScore = brain.score;
+    const specificScore = domainScore?.score || globalScore;
+
+    // Weight domain-specific more heavily if available
+    const combinedScore = domainScore
+      ? (specificScore * 0.7) + (globalScore * 0.3)
+      : globalScore;
+
+    // Apply tier bonus/penalty
+    const tierModifier = {
+      'promoted': 0.05,
+      'standard': 0,
+      'demoted': -0.1,
+    }[brain.tier] || 0;
+
+    return Math.max(0, Math.min(1, combinedScore + tierModifier));
+  }
+
+  /**
+   * Update brain score after execution
+   */
+  updateBrainScore(brain, domain, result) {
+    const success = result.success;
+    const responseTime = result.responseTime || 0;
+
+    // Update execution counts
+    brain.totalExecutions++;
+    if (success) {
+      brain.successCount++;
+    } else {
+      brain.errorCount++;
+    }
+
+    // Update rolling window
+    brain.recentExecutions.push({
+      success,
+      responseTime,
+      timestamp: Date.now(),
+    });
+
+    // Trim to window size
+    if (brain.recentExecutions.length > this.config.rollingWindowSize) {
+      brain.recentExecutions.shift();
+    }
+
+    // Calculate new scores from rolling window
+    const recent = brain.recentExecutions;
+    const successRate = recent.filter(e => e.success).length / recent.length;
+
+    // Calculate response time stats
+    const times = recent.map(e => e.responseTime).filter(t => t > 0);
+    const avgTime = times.length > 0 ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+    const variance = times.length > 1
+      ? times.reduce((sum, t) => sum + Math.pow(t - avgTime, 2), 0) / times.length
+      : 0;
+
+    brain.avgResponseTime = avgTime;
+    brain.responseTimeVariance = variance;
+
+    // Normalize speed score (faster = higher, cap at 10s)
+    const speedScore = Math.max(0, 1 - (avgTime / 10000));
+
+    // Normalize consistency score (lower variance = higher)
+    const consistencyScore = Math.max(0, 1 - (Math.sqrt(variance) / 5000));
+
+    // Calculate weighted score
+    const weights = this.config.scoreWeights;
+    const newScore =
+      (successRate * weights.successRate) +
+      (speedScore * weights.speed) +
+      (consistencyScore * weights.consistency);
+
+    // Apply decay and update
+    brain.score = (brain.score * this.config.scoreDecay) + (newScore * (1 - this.config.scoreDecay));
+
+    // Update domain-specific scores
+    this.updateDomainScore(brain, domain, success, responseTime);
+
+    // Check for promotion/demotion
+    this.evaluateBrainTier(brain);
+
+    this.emit('brain:scoreUpdate', {
+      brainId: brain.id,
+      score: brain.score,
+      tier: brain.tier,
+      successRate,
+      avgResponseTime: avgTime,
+    });
+  }
+
+  /**
+   * Update domain-specific score
+   */
+  updateDomainScore(brain, domain, success, responseTime) {
+    const domainKey = this.getDomainKey(domain);
+
+    if (!this.domainBrainScores.has(domainKey)) {
+      this.domainBrainScores.set(domainKey, new Map());
+    }
+
+    const domainScores = this.domainBrainScores.get(domainKey);
+
+    if (!domainScores.has(brain.id)) {
+      domainScores.set(brain.id, {
+        score: 0.5,
+        successCount: 0,
+        errorCount: 0,
+        totalTime: 0,
+        executions: 0,
+      });
+    }
+
+    const ds = domainScores.get(brain.id);
+    ds.executions++;
+    ds.totalTime += responseTime;
+
+    if (success) {
+      ds.successCount++;
+    } else {
+      ds.errorCount++;
+    }
+
+    // Calculate domain-specific score
+    const successRate = ds.successCount / ds.executions;
+    const avgTime = ds.totalTime / ds.executions;
+    const speedScore = Math.max(0, 1 - (avgTime / 10000));
+
+    ds.score = (successRate * 0.7) + (speedScore * 0.3);
+  }
+
+  /**
+   * Evaluate brain tier (promotion/demotion)
+   */
+  evaluateBrainTier(brain) {
+    // Need minimum samples before changing tier
+    if (brain.totalExecutions < this.config.minSamples * 2) {
+      return;
+    }
+
+    const previousTier = brain.tier;
+
+    if (brain.score >= this.config.promotionThreshold && brain.tier !== 'promoted') {
+      brain.tier = 'promoted';
+      brain.promotionCount++;
+      this.log(`[Adaptive] PROMOTED: ${brain.id} (score: ${brain.score.toFixed(3)})`, 'success');
+      this.emit('brain:promoted', { brainId: brain.id, score: brain.score });
+
+    } else if (brain.score <= this.config.demotionThreshold && brain.tier !== 'demoted') {
+      brain.tier = 'demoted';
+      brain.demotionCount++;
+      this.log(`[Adaptive] DEMOTED: ${brain.id} (score: ${brain.score.toFixed(3)})`, 'warn');
+      this.emit('brain:demoted', { brainId: brain.id, score: brain.score });
+
+    } else if (brain.tier === 'demoted' && brain.score > this.config.demotionThreshold + 0.1) {
+      // Recover from demotion if score improves
+      brain.tier = 'standard';
+      this.log(`[Adaptive] RECOVERED: ${brain.id} (score: ${brain.score.toFixed(3)})`, 'info');
+      this.emit('brain:recovered', { brainId: brain.id, score: brain.score });
+
+    } else if (brain.tier === 'promoted' && brain.score < this.config.promotionThreshold - 0.1) {
+      // Lose promotion if score drops
+      brain.tier = 'standard';
+      this.log(`[Adaptive] STANDARD: ${brain.id} (score: ${brain.score.toFixed(3)})`, 'info');
+    }
+  }
+
+  /**
+   * Get brain leaderboard (sorted by score)
+   */
+  getBrainLeaderboard() {
+    const leaderboard = [];
+
+    for (const [id, brain] of this.brains) {
+      leaderboard.push({
+        rank: 0,
+        id,
+        label: brain['@label'],
+        score: brain.score,
+        tier: brain.tier,
+        successRate: brain.totalExecutions > 0
+          ? brain.successCount / brain.totalExecutions
+          : 0,
+        avgResponseTime: brain.avgResponseTime,
+        totalExecutions: brain.totalExecutions,
+        promotions: brain.promotionCount,
+        demotions: brain.demotionCount,
+      });
+    }
+
+    // Sort by score descending
+    leaderboard.sort((a, b) => b.score - a.score);
+
+    // Assign ranks
+    leaderboard.forEach((entry, index) => {
+      entry.rank = index + 1;
+    });
+
+    return leaderboard;
+  }
+
+  /**
+   * Get best brain for a domain
+   */
+  getBestBrainForDomain(domain) {
+    const candidates = this.getCandidateBrains(domain);
+    if (candidates.length === 0) return null;
+
+    return this.selectBestBrain(domain, candidates);
+  }
+
+  /**
+   * Reset brain scores (for testing)
+   */
+  resetScores() {
+    for (const [id, brain] of this.brains) {
+      brain.score = 0.5;
+      brain.tier = 'standard';
+      brain.recentExecutions = [];
+      brain.avgResponseTime = 0;
+      brain.responseTimeVariance = 0;
+      brain.totalExecutions = 0;
+      brain.successCount = 0;
+      brain.errorCount = 0;
+      brain.promotionCount = 0;
+      brain.demotionCount = 0;
+    }
+    this.domainBrainScores.clear();
+    this.log('Brain scores reset', 'info');
   }
 
   /**
@@ -221,23 +581,44 @@ class BrainMeshOrchestrator extends EventEmitter {
       const responseTime = Date.now() - startTime;
       this.updateMetrics(true, responseTime);
 
-      brain.successCount++;
       brain.lastExecution = Date.now();
       brain.status = 'idle';
 
-      return {
+      const execResult = {
         success: true,
         output: result.output,
         brain: brain.id,
         responseTime,
       };
 
+      // Update adaptive score
+      if (context?.domain) {
+        this.updateBrainScore(brain, context.domain, execResult);
+      } else {
+        this.updateBrainScore(brain, 'general', execResult);
+      }
+
+      return execResult;
+
     } catch (error) {
       const responseTime = Date.now() - startTime;
       this.updateMetrics(false, responseTime);
 
-      brain.errorCount++;
       brain.status = 'error';
+
+      const execResult = {
+        success: false,
+        error: error.message,
+        brain: brain.id,
+        responseTime,
+      };
+
+      // Update adaptive score for failure
+      if (context?.domain) {
+        this.updateBrainScore(brain, context.domain, execResult);
+      } else {
+        this.updateBrainScore(brain, 'general', execResult);
+      }
 
       this.log(`Brain ${brain.id} failed: ${error.message}`, 'error');
 
@@ -598,7 +979,7 @@ Provide fixes as JSON array:
   }
 
   /**
-   * Get brain status
+   * Get brain status (with adaptive scoring)
    */
   getBrainStatus() {
     const status = {};
@@ -611,10 +992,50 @@ Provide fixes as JSON array:
         successCount: brain.successCount,
         errorCount: brain.errorCount,
         lastExecution: brain.lastExecution,
+
+        // Adaptive scoring fields
+        score: brain.score,
+        tier: brain.tier,
+        totalExecutions: brain.totalExecutions,
+        avgResponseTime: brain.avgResponseTime,
+        successRate: brain.totalExecutions > 0
+          ? (brain.successCount / brain.totalExecutions).toFixed(3)
+          : 'N/A',
+        promotions: brain.promotionCount,
+        demotions: brain.demotionCount,
       };
     }
 
     return status;
+  }
+
+  /**
+   * Get adaptive routing stats
+   */
+  getAdaptiveStats() {
+    const leaderboard = this.getBrainLeaderboard();
+
+    return {
+      enabled: this.config.adaptiveRouting,
+      explorationRate: this.config.explorationRate,
+      scoreWeights: this.config.scoreWeights,
+      thresholds: {
+        promotion: this.config.promotionThreshold,
+        demotion: this.config.demotionThreshold,
+      },
+      leaderboard: leaderboard.slice(0, 5), // Top 5
+      tiers: {
+        promoted: leaderboard.filter(b => b.tier === 'promoted').length,
+        standard: leaderboard.filter(b => b.tier === 'standard').length,
+        demoted: leaderboard.filter(b => b.tier === 'demoted').length,
+      },
+      domainScores: Object.fromEntries(
+        Array.from(this.domainBrainScores.entries()).map(([domain, scores]) => [
+          domain,
+          Object.fromEntries(scores),
+        ])
+      ),
+    };
   }
 
   /**
@@ -630,6 +1051,15 @@ Provide fixes as JSON array:
       scopeDepth: this.cm1State.scopeStack.length,
       efficiency: this.getEfficiency(),
       agentAPI: 'unknown',
+
+      // Adaptive routing health
+      adaptive: {
+        enabled: this.config.adaptiveRouting,
+        explorationRate: this.config.explorationRate,
+        promotedBrains: Array.from(this.brains.values()).filter(b => b.tier === 'promoted').length,
+        demotedBrains: Array.from(this.brains.values()).filter(b => b.tier === 'demoted').length,
+        topBrain: this.getBrainLeaderboard()[0] || null,
+      },
     };
 
     // Check agent API
@@ -642,6 +1072,90 @@ Provide fixes as JSON array:
     }
 
     return results;
+  }
+
+  /**
+   * Serialize state for persistence
+   */
+  serializeState() {
+    const brainStates = {};
+    for (const [id, brain] of this.brains) {
+      brainStates[id] = {
+        score: brain.score,
+        tier: brain.tier,
+        totalExecutions: brain.totalExecutions,
+        successCount: brain.successCount,
+        errorCount: brain.errorCount,
+        avgResponseTime: brain.avgResponseTime,
+        promotionCount: brain.promotionCount,
+        demotionCount: brain.demotionCount,
+      };
+    }
+
+    return {
+      version: '2.0.0',
+      timestamp: Date.now(),
+      brains: brainStates,
+      domainScores: Object.fromEntries(
+        Array.from(this.domainBrainScores.entries()).map(([domain, scores]) => [
+          domain,
+          Object.fromEntries(scores),
+        ])
+      ),
+      metrics: this.metrics,
+    };
+  }
+
+  /**
+   * Restore state from persistence
+   */
+  restoreState(state) {
+    if (!state || state.version !== '2.0.0') {
+      this.log('Invalid or incompatible state version', 'warn');
+      return false;
+    }
+
+    // Restore brain states
+    for (const [id, savedState] of Object.entries(state.brains)) {
+      const brain = this.brains.get(id);
+      if (brain) {
+        Object.assign(brain, savedState);
+      }
+    }
+
+    // Restore domain scores
+    for (const [domain, scores] of Object.entries(state.domainScores)) {
+      this.domainBrainScores.set(domain, new Map(Object.entries(scores)));
+    }
+
+    // Restore metrics
+    Object.assign(this.metrics, state.metrics);
+
+    this.log(`Restored state from ${new Date(state.timestamp).toISOString()}`, 'success');
+    return true;
+  }
+
+  /**
+   * Save state to file
+   */
+  saveStateToFile(filepath) {
+    const state = this.serializeState();
+    fs.writeFileSync(filepath, JSON.stringify(state, null, 2));
+    this.log(`State saved to ${filepath}`, 'success');
+    return filepath;
+  }
+
+  /**
+   * Load state from file
+   */
+  loadStateFromFile(filepath) {
+    if (!fs.existsSync(filepath)) {
+      this.log(`State file not found: ${filepath}`, 'warn');
+      return false;
+    }
+
+    const state = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
+    return this.restoreState(state);
   }
 }
 
