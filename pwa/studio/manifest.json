@@ -1,0 +1,114 @@
+{
+    "name": "KUHUL GLYPH Studio",
+    "short_name": "KUHUL Studio",
+    "description": "Terminal Projection PWA with K'UHUL glyph execution, code editor, and brain-mesh orchestration",
+    "version": "2.1.0",
+    "start_url": "./index.php",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#0a0f0a",
+    "theme_color": "#22c55e",
+    "lang": "en",
+    "categories": ["developer tools", "productivity", "utilities"],
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230a0f0a' width='100' height='100'/><text y='.9em' x='10' font-size='80' fill='%2322c55e'>⟁</text></svg>",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%230a0f0a' width='512' height='512' rx='64'/><text y='380' x='100' font-size='350' fill='%2322c55e'>⟁</text></svg>",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'><rect fill='%230a0f0a' width='1280' height='720'/><text y='360' x='540' font-size='120' fill='%2322c55e'>⟁ Studio</text></svg>",
+            "sizes": "1280x720",
+            "type": "image/svg+xml",
+            "form_factor": "wide",
+            "label": "KUHUL GLYPH Studio - Terminal and Editor"
+        },
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844'><rect fill='%230a0f0a' width='390' height='844'/><text y='422' x='100' font-size='80' fill='%2322c55e'>⟁ Studio</text></svg>",
+            "sizes": "390x844",
+            "type": "image/svg+xml",
+            "form_factor": "narrow",
+            "label": "KUHUL GLYPH Studio - Mobile View"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Terminal",
+            "short_name": "Terminal",
+            "description": "Open KUHUL Terminal",
+            "url": "./index.php#terminal",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%230a0f0a' width='96' height='96' rx='12'/><text y='70' x='20' font-size='60' fill='%2322c55e'>></text></svg>",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Editor",
+            "short_name": "Editor",
+            "description": "Open Code Editor",
+            "url": "./index.php#editor",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%230a0f0a' width='96' height='96' rx='12'/><text y='70' x='20' font-size='50' fill='%2322c55e'>📝</text></svg>",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Leaderboard",
+            "short_name": "Brains",
+            "description": "View Brain Mesh Leaderboard",
+            "url": "./index.php?cmd=brain-mesh+leaderboard",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%230a0f0a' width='96' height='96' rx='12'/><text y='70' x='20' font-size='50' fill='%2322c55e'>🧠</text></svg>",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "protocol_handlers": [
+        {
+            "protocol": "web+kuhul",
+            "url": "./index.php?glyph=%s"
+        }
+    ],
+    "share_target": {
+        "action": "./index.php",
+        "method": "POST",
+        "enctype": "multipart/form-data",
+        "params": {
+            "title": "title",
+            "text": "cmd",
+            "url": "url"
+        }
+    },
+    "file_handlers": [
+        {
+            "action": "./index.php",
+            "accept": {
+                "text/plain": [".khl", ".kuhul", ".xjson", ".xcfe"]
+            }
+        }
+    ],
+    "launch_handler": {
+        "client_mode": ["navigate-existing", "auto"]
+    },
+    "edge_side_panel": {
+        "preferred_width": 480
+    }
+}

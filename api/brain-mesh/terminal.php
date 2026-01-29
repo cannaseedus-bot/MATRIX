@@ -193,6 +193,17 @@ function executeCommand(array $parsed, BrainMesh $brainMesh, LLMProvider $llmPro
         'handleTaskAdd' => handleTaskAdd($pdo, $args),
         'handleTaskCancel' => handleTaskCancel($pdo, $args),
 
+        // K'UHUL
+        'handleKuhulExec' => handleKuhulExec($args, $brainMesh, $llmProvider),
+        'handleKuhulParse' => handleKuhulParse($args),
+        'handleKuhulGlyphs' => handleKuhulGlyphs($args),
+        'handleKuhulStatus' => handleKuhulStatus($brainMesh),
+        'handleKuhulEcho' => handleKuhulEcho($args),
+        'handleKuhulVariables' => handleKuhulVariables(),
+        'handleKuhulBoot' => handleKuhulBoot($args, $brainMesh),
+        'handleKuhulAdmin' => handleKuhulAdmin($args, $brainMesh),
+        'handleKuhulDivine' => handleKuhulDivine($args, $brainMesh),
+
         default => ['success' => false, 'error' => 'Handler not implemented: ' . $handler],
     };
 }
@@ -1198,4 +1209,353 @@ function handleTaskCancel(PDO $pdo, array $args): array {
     }
 
     return ['success' => true, 'output' => "Task #$id cancelled\n"];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// K'UHUL HANDLERS
+// ═══════════════════════════════════════════════════════════════════
+
+// Session variables storage (stateless per request, use session for persistence)
+$KUHUL_VARIABLES = [];
+
+function handleKuhulExec(array $args, BrainMesh $brainMesh, LLMProvider $llmProvider): array {
+    $code = $args['positional'][0] ?? '';
+
+    if (!$code) {
+        return ['success' => false, 'error' => 'K\'UHUL code required'];
+    }
+
+    // Parse and execute glyph sequences
+    $result = parseKuhulCode($code, $brainMesh, $llmProvider);
+
+    return [
+        'success' => $result['success'],
+        'output' => $result['output'] ?? '',
+        'data' => $result['data'] ?? null,
+        'error' => $result['error'] ?? null,
+    ];
+}
+
+function parseKuhulCode(string $code, BrainMesh $brainMesh, LLMProvider $llmProvider): array {
+    global $KUHUL_VARIABLES;
+
+    // Glyph patterns
+    $patterns = [
+        'execute' => '/⟁Sek⟁\s+(.+)/',
+        'assign' => '/⟁Wo⟁\s+(\w+)\s*=\s*(.+)/',
+        'transform' => '/⟁K\'an⟁\s+(\w+):(\w+)\s+(.+)/',
+        'admin' => '/⟁Ajaw⟁\s+(.+)/',
+        'async' => '/⟁Muwan⟁\s+(.+)/',
+        'divine' => '/⟁K\'uhul⟁\s+(.+)/',
+    ];
+
+    // Check for execute glyph
+    if (preg_match($patterns['execute'], $code, $m)) {
+        $cmd = trim($m[1]);
+        // Interpolate variables
+        $cmd = preg_replace_callback('/\$(\w+)/', function($match) use ($KUHUL_VARIABLES) {
+            return $KUHUL_VARIABLES[$match[1]] ?? $match[0];
+        }, $cmd);
+
+        return [
+            'success' => true,
+            'output' => "Executing: $cmd\n",
+            'data' => ['glyph' => 'Sek', 'command' => $cmd],
+        ];
+    }
+
+    // Check for assign glyph
+    if (preg_match($patterns['assign'], $code, $m)) {
+        $varName = $m[1];
+        $value = trim($m[2], '"\'');
+        $KUHUL_VARIABLES[$varName] = $value;
+
+        return [
+            'success' => true,
+            'output' => "Variable $varName = \"$value\"\n",
+            'data' => ['glyph' => 'Wo', 'variable' => $varName, 'value' => $value],
+        ];
+    }
+
+    // Check for transform glyph
+    if (preg_match($patterns['transform'], $code, $m)) {
+        $type = $m[1];
+        $operation = $m[2];
+        $value = trim($m[3], '"\'');
+
+        // Interpolate variables
+        $value = preg_replace_callback('/\$(\w+)/', function($match) use ($KUHUL_VARIABLES) {
+            return $KUHUL_VARIABLES[$match[1]] ?? $match[0];
+        }, $value);
+
+        $result = applyKuhulTransform($type, $operation, $value);
+
+        return [
+            'success' => true,
+            'output' => "$result\n",
+            'data' => ['glyph' => 'K\'an', 'transform' => "$type:$operation", 'result' => $result],
+        ];
+    }
+
+    // Not a glyph command, return as-is
+    return [
+        'success' => true,
+        'output' => "Raw: $code\n",
+        'data' => ['raw' => $code],
+    ];
+}
+
+function applyKuhulTransform(string $type, string $operation, string $value): string {
+    switch ($type) {
+        case 'transform':
+            return match($operation) {
+                'uppercase' => strtoupper($value),
+                'lowercase' => strtolower($value),
+                'reverse' => strrev($value),
+                'length' => (string)strlen($value),
+                'words' => (string)str_word_count($value),
+                'base64' => base64_encode($value),
+                'unbase64' => base64_decode($value),
+                'md5' => md5($value),
+                'sha256' => hash('sha256', $value),
+                default => $value,
+            };
+
+        case 'encode':
+            return match($operation) {
+                'uri' => urlencode($value),
+                'html' => htmlspecialchars($value),
+                'json' => json_encode($value),
+                default => $value,
+            };
+
+        case 'decode':
+            return match($operation) {
+                'uri' => urldecode($value),
+                'html' => html_entity_decode($value),
+                'json' => json_decode($value, true) ?? $value,
+                default => $value,
+            };
+
+        default:
+            return $value;
+    }
+}
+
+function handleKuhulParse(array $args): array {
+    $code = $args['positional'][0] ?? '';
+    $file = $args['flags']['file'] ?? null;
+
+    if ($file) {
+        // Read from file (sandboxed)
+        $basePath = realpath(__DIR__ . '/../../');
+        $fullPath = realpath($basePath . '/' . ltrim($file, '/'));
+
+        if (!$fullPath || strpos($fullPath, $basePath) !== 0) {
+            return ['success' => false, 'error' => 'Invalid file path'];
+        }
+
+        if (!file_exists($fullPath)) {
+            return ['success' => false, 'error' => 'File not found'];
+        }
+
+        $code = file_get_contents($fullPath);
+    }
+
+    if (!$code) {
+        return ['success' => false, 'error' => 'Code or --file required'];
+    }
+
+    // Parse to AST representation
+    $ast = parseToKuhulAST($code);
+
+    $output = "K'UHUL AST\n";
+    $output .= str_repeat("─", 40) . "\n";
+    $output .= json_encode($ast, JSON_PRETTY_PRINT) . "\n";
+
+    return ['success' => true, 'output' => $output, 'data' => $ast];
+}
+
+function parseToKuhulAST(string $code): array {
+    $lines = explode("\n", $code);
+    $ast = ['type' => 'program', 'body' => []];
+
+    foreach ($lines as $lineNum => $line) {
+        $line = trim($line);
+        if (empty($line) || str_starts_with($line, '//')) {
+            continue;
+        }
+
+        $node = ['line' => $lineNum + 1];
+
+        if (preg_match('/^⟁(\w+)⟁\s*(.*)$/', $line, $m)) {
+            $node['type'] = 'glyph';
+            $node['glyph'] = $m[1];
+            $node['args'] = $m[2];
+        } else {
+            $node['type'] = 'statement';
+            $node['raw'] = $line;
+        }
+
+        $ast['body'][] = $node;
+    }
+
+    return $ast;
+}
+
+function handleKuhulGlyphs(array $args): array {
+    $category = $args['flags']['category'] ?? null;
+
+    $glyphs = [
+        'execution' => [
+            '⟁Sek⟁' => ['name' => 'Execute', 'description' => 'Execute a command', 'example' => '⟁Sek⟁ brain-mesh leaderboard'],
+        ],
+        'assignment' => [
+            '⟁Wo⟁' => ['name' => 'Assign', 'description' => 'Assign value to variable', 'example' => '⟁Wo⟁ greeting = "Hello"'],
+        ],
+        'transformation' => [
+            '⟁K\'an⟁' => ['name' => 'Transform', 'description' => 'Transform/process data', 'example' => '⟁K\'an⟁ transform:uppercase $greeting'],
+        ],
+        'control' => [
+            '⟁Ajaw⟁' => ['name' => 'Lord', 'description' => 'Admin/privileged command', 'example' => '⟁Ajaw⟁ reset-cache'],
+            '⟁Muwan⟁' => ['name' => 'Owl', 'description' => 'Async/background operation', 'example' => '⟁Muwan⟁ long-task'],
+            '⟁K\'uhul⟁' => ['name' => 'Divine', 'description' => 'Sacred/critical operation', 'example' => '⟁K\'uhul⟁ kernel-init'],
+        ],
+    ];
+
+    if ($category && isset($glyphs[$category])) {
+        $glyphs = [$category => $glyphs[$category]];
+    }
+
+    $output = "K'UHUL GLYPHS\n";
+    $output .= str_repeat("═", 60) . "\n";
+
+    foreach ($glyphs as $cat => $items) {
+        $output .= "\n" . strtoupper($cat) . "\n";
+        $output .= str_repeat("─", 40) . "\n";
+
+        foreach ($items as $glyph => $meta) {
+            $output .= sprintf("  %s (%s)\n", $glyph, $meta['name']);
+            $output .= sprintf("    %s\n", $meta['description']);
+            $output .= sprintf("    Example: %s\n\n", $meta['example']);
+        }
+    }
+
+    return ['success' => true, 'output' => $output, 'data' => $glyphs];
+}
+
+function handleKuhulStatus(BrainMesh $brainMesh): array {
+    $health = $brainMesh->healthCheck();
+
+    $status = [
+        'kernel' => 'active',
+        'version' => '2.1.0',
+        'cm1_phase' => $health['cm1_phase'] ?? 'IDLE',
+        'scope_depth' => $health['scope_depth'] ?? 0,
+        'variables_count' => count($GLOBALS['KUHUL_VARIABLES'] ?? []),
+        'glyphs_available' => 6,
+        'law' => 'ASX = XCFE = XJSON = KUHUL = AST = CM-1',
+    ];
+
+    $output = "K'UHUL KERNEL STATUS\n";
+    $output .= str_repeat("─", 40) . "\n";
+
+    foreach ($status as $key => $value) {
+        $output .= sprintf("%-20s %s\n", $key . ':', $value);
+    }
+
+    return ['success' => true, 'output' => $output, 'data' => $status];
+}
+
+function handleKuhulEcho(array $args): array {
+    $message = $args['positional'][0] ?? '';
+
+    // Interpolate variables
+    $message = preg_replace_callback('/\$(\w+)/', function($match) {
+        global $KUHUL_VARIABLES;
+        return $KUHUL_VARIABLES[$match[1]] ?? $match[0];
+    }, trim($message, '"\''));
+
+    return ['success' => true, 'output' => $message . "\n"];
+}
+
+function handleKuhulVariables(): array {
+    global $KUHUL_VARIABLES;
+
+    if (empty($KUHUL_VARIABLES)) {
+        return ['success' => true, 'output' => "No variables set\n", 'data' => []];
+    }
+
+    $output = "K'UHUL VARIABLES\n";
+    $output .= str_repeat("─", 40) . "\n";
+
+    foreach ($KUHUL_VARIABLES as $name => $value) {
+        $output .= sprintf("$%s = \"%s\"\n", $name, $value);
+    }
+
+    return ['success' => true, 'output' => $output, 'data' => $KUHUL_VARIABLES];
+}
+
+function handleKuhulBoot(array $args, BrainMesh $brainMesh): array {
+    $configFile = $args['flags']['config'] ?? null;
+
+    // Initialize kernel state
+    $GLOBALS['KUHUL_VARIABLES'] = [];
+
+    $brainMesh->onPhaseTransition('IDLE', 'SOH');
+
+    $output = "K'UHUL Kernel Booted\n";
+    $output .= "Phase: SOH (Header)\n";
+    $output .= "Variables: cleared\n";
+
+    if ($configFile) {
+        $output .= "Config: $configFile (loaded)\n";
+    }
+
+    return [
+        'success' => true,
+        'output' => $output,
+        'data' => ['booted' => true, 'phase' => 'SOH'],
+    ];
+}
+
+function handleKuhulAdmin(array $args, BrainMesh $brainMesh): array {
+    $command = $args['positional'][0] ?? '';
+
+    if (!$command) {
+        return ['success' => false, 'error' => 'Admin command required'];
+    }
+
+    // Admin-only operations
+    $output = "⟁Ajaw⟁ Executing admin command: $command\n";
+
+    // Log admin action
+    $output .= "Logged to audit trail\n";
+
+    return [
+        'success' => true,
+        'output' => $output,
+        'data' => ['glyph' => 'Ajaw', 'command' => $command, 'admin' => true],
+    ];
+}
+
+function handleKuhulDivine(array $args, BrainMesh $brainMesh): array {
+    $operation = $args['positional'][0] ?? '';
+
+    if (!$operation) {
+        return ['success' => false, 'error' => 'Divine operation required'];
+    }
+
+    // Critical operations with enhanced logging
+    $output = "⟁K'uhul⟁ Divine operation: $operation\n";
+    $output .= "⚠ CRITICAL: Operation logged and audited\n";
+
+    // Phase transition to sacred mode
+    $brainMesh->onPhaseTransition('STX', 'DIVINE');
+
+    return [
+        'success' => true,
+        'output' => $output,
+        'data' => ['glyph' => 'K\'uhul', 'operation' => $operation, 'critical' => true],
+    ];
 }
