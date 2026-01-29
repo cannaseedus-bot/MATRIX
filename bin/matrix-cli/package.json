@@ -1,0 +1,29 @@
+{
+  "name": "matrix-cli",
+  "version": "2.1.0",
+  "description": "MATRIX CLI with DNS-based tunneling for firewall traversal",
+  "main": "index.js",
+  "bin": {
+    "matrix-cli": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "matrix",
+    "cli",
+    "dns-tunnel",
+    "brain-mesh",
+    "kuhul",
+    "llm"
+  ],
+  "author": "MATRIX Project",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "dns-packet": "^5.6.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

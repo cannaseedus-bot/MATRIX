@@ -9,8 +9,16 @@
 - **PHP Broker API** - REST API that queues and distributes tasks
 - **Python Agent** - Bridges broker to AI code agents (Claude, Codex, Aider, Ollama)
 - **PWA Frontend** - Web interface for managing tasks
-- **MX2LM CLI** - KUHUL-controlled host orchestrator
+- **MX2LM Server** - KUHUL-controlled server runtime (Node.js)
 - **PowerShell Server** - Static file server with API endpoints (Windows)
+
+## New Components (v2.1)
+
+- **Brain-Mesh Orchestrator** - Adaptive multi-LLM routing with epsilon-greedy selection
+- **KUHUL GLYPH Studio** - Terminal projection PWA with code editor
+- **Matrix CLI** - Command-line interface with DNS-based tunneling
+- **Micronaut CSS** - CSS-variable-driven UI monitoring system
+- **CM-1 Protocol** - Control character layer for phase management
 
 ## Quick Start
 
@@ -109,44 +117,62 @@ curl -X POST http://127.0.0.1:5001/ollama \
 
 ```
 MATRIX/
-├── api/                    # PHP Broker API
+├── api/                    # PHP APIs
+│   ├── brain-mesh/         # Brain-Mesh Orchestrator (NEW)
+│   │   ├── BrainMesh.php    # Adaptive routing engine
+│   │   ├── LLMProvider.php  # Multi-LLM provider class
+│   │   ├── terminal.php     # Terminal projection API
+│   │   ├── command-registry.php # Command allowlist
+│   │   ├── config.example.php # Configuration template
+│   │   └── db.php           # Database connection
 │   ├── agents.php          # Agent management
 │   ├── tasks.php           # Task listing
-│   ├── add_task.php        # Create tasks
-│   ├── get_task.php        # Agent polling
-│   ├── submit_result.php   # Result submission
 │   └── schema.sql          # MySQL schema
+│
+├── bin/                    # CLI Tools (NEW)
+│   └── matrix-cli/         # Matrix CLI
+│       ├── index.js         # Main entry point
+│       ├── dns-tunnel.js    # DNS-based communication
+│       ├── commands/        # CLI command modules
+│       └── package.json     # Dependencies
 │
 ├── agent/                  # Python Agent (AI Bridge)
 │   ├── agent.py            # Main agent script
 │   ├── agent_config.json   # Configuration
 │   └── requirements.txt    # Python dependencies
 │
-├── cli/                    # MX2LM CLI
-│   ├── server.khl          # Server runtime
-│   ├── server/             # CLI module (Node.js)
+├── cli/                    # MX2LM Server Runtime
+│   ├── server.khl          # Server runtime config
+│   ├── server/             # Node.js server module
 │   ├── powershell/         # PowerShell static server
-│   │   ├── server.ps1      # Main server script
-│   │   ├── start-server.bat# Windows launcher
-│   │   ├── public/         # Static files root
-│   │   └── xcfe/           # XCFE governed execution
-│   │       ├── psx-cli.js  # PS-DSL CLI
-│   │       └── cm1-wrapper.js  # CM-1 audit binding
-│   └── ui/                 # CSS Micronaut UI
+│   │   ├── server.ps1       # Main server script
+│   │   ├── start-server.bat # Windows launcher
+│   │   └── xcfe/            # XCFE governed execution
+│   └── ui/                 # Micronaut CSS (NEW)
+│       ├── micronaut.css    # CSS variable bindings
+│       ├── emerald_ghost_atomic.css # Atomic framework
+│       └── demo.html        # Interactive demo
 │
-├── pwa/                    # Progressive Web App
-│   ├── index.html          # Main interface
+├── pwa/                    # Progressive Web Apps
+│   ├── studio/             # KUHUL GLYPH Studio (NEW)
+│   │   ├── index.php        # Main PWA shell
+│   │   ├── glyph-runtime.js # Client glyph parser
+│   │   ├── sw.js            # Service worker
+│   │   └── manifest.json    # PWA metadata
+│   ├── index.html          # Task runner interface
 │   └── sw.js               # Service worker
 │
 ├── docs/                   # Documentation
 │   ├── ai-agents.md        # AI Agent integration
-│   ├── mx2lm-cli.md        # CLI specification
+│   ├── mx2lm-cli.md        # Server specification
 │   └── mxs.md              # MXS specification
 │
 ├── specs/                  # Language Specifications
 │   ├── mxs/                # MXS stylesheets
 │   ├── kuhul/              # KUHUL class definitions
 │   ├── cm1/                # Control Micronaut-1 spec
+│   │   ├── control-micronaut.xjson # CM-1 protocol
+│   │   └── control-micronaut.schema.xjson
 │   └── server/             # Server schemas
 │
 ├── inference/              # Inference Plains
@@ -273,27 +299,178 @@ Features:
 
 See [cli/powershell/xcfe/README.md](cli/powershell/xcfe/README.md) for full specification.
 
+## Brain-Mesh API
+
+Adaptive LLM orchestrator with multi-armed bandit routing.
+
+### Quick Start
+
+```bash
+# Health check
+curl http://localhost/api/brain-mesh/health.php
+
+# Execute terminal command
+curl -X POST http://localhost/api/brain-mesh/terminal.php \
+  -H "Content-Type: application/json" \
+  -d '{"cmd": "brain-mesh leaderboard"}'
+
+# List LLM providers
+curl -X POST http://localhost/api/brain-mesh/terminal.php \
+  -d '{"cmd": "llm providers"}'
+```
+
+### Configuration
+
+Copy `api/brain-mesh/config.example.php` to `config.php` and configure:
+
+- Database credentials (MySQL/MariaDB)
+- LLM provider API keys (Anthropic, OpenAI, etc.)
+- Ollama host for local models
+- Adaptive scoring tuning
+
+### Supported LLM Providers
+
+| Provider | Models | API Key Variable |
+|----------|--------|------------------|
+| Anthropic | Claude 3.5/4 | `ANTHROPIC_API_KEY` |
+| OpenAI | GPT-4o/o1 | `OPENAI_API_KEY` |
+| Google | Gemini 2.0 | `GOOGLE_API_KEY` |
+| Mistral | Mistral Large | `MISTRAL_API_KEY` |
+| Groq | Llama 3.3 70B | `GROQ_API_KEY` |
+| Ollama | 40+ local | (none) |
+| GGUF | llama.cpp | (local) |
+
+## KUHUL GLYPH Studio
+
+Terminal projection PWA with integrated code editor.
+
+### Access
+
+Open `/pwa/studio/` in browser and install as PWA.
+
+### Features
+
+- Split-pane terminal + code editor
+- K'UHUL glyph execution (⟁Sek⟁, ⟁Wo⟁, ⟁K'an⟁)
+- Micronaut health monitoring
+- 4 themes (Emerald Ghost, Matrix, Cyber, Night)
+- Offline support via Service Worker
+- Command palette (Ctrl+Shift+P)
+
+### Glyph Syntax
+
+| Glyph | Name | Purpose | Example |
+|-------|------|---------|---------|
+| ⟁Sek⟁ | Execute | Run command | `⟁Sek⟁ brain-mesh health` |
+| ⟁Wo⟁ | Assign | Set variable | `⟁Wo⟁ msg = "Hello"` |
+| ⟁K'an⟁ | Transform | Process data | `⟁K'an⟁ transform:uppercase $msg` |
+| ⟁Ajaw⟁ | Lord | Admin command | `⟁Ajaw⟁ reset-cache` |
+| ⟁Muwan⟁ | Owl | Async operation | `⟁Muwan⟁ long-task` |
+| ⟁K'uhul⟁ | Divine | Critical op | `⟁K'uhul⟁ kernel-init` |
+
+### Terminal Commands
+
+| Namespace | Commands |
+|-----------|----------|
+| brain-mesh | brains, leaderboard, stats, health, select, best |
+| llm | providers, models, chat, test |
+| kuhul | exec, parse, glyphs, status, echo, variables |
+| file | read, list, info, search, tree |
+| help | (shows all commands) |
+
+## Matrix CLI
+
+Command-line interface with DNS-based tunneling for firewall traversal.
+
+### Installation
+
+```bash
+# Global install
+npm install -g ./bin/matrix-cli
+
+# Or run directly
+node bin/matrix-cli/index.js
+```
+
+### Usage
+
+```bash
+# Setup and connect
+matrix-cli setup
+matrix-cli connect --dns
+
+# Brain management
+matrix-cli brain list
+matrix-cli brain score claude-sonnet
+matrix-cli brain leaderboard
+
+# Terminal commands
+matrix-cli terminal "brain-mesh health"
+matrix-cli terminal "llm providers"
+
+# DNS tunnel (no HTTP required)
+matrix-cli tunnel start --ttl 300
+matrix-cli tunnel status
+```
+
+### DNS-Based Communication
+
+Matrix CLI uses DNS TXT records for communication, avoiding HTTP firewall issues:
+
+```
+┌─────────────┐     DNS Query      ┌─────────────┐
+│  Matrix CLI │ ─────────────────▶ │  DNS Server │
+│  (mx2lm)    │                    │  (PHP/bind) │
+│             │ ◀───────────────── │             │
+└─────────────┘     TXT Response   └─────────────┘
+```
+
+- **No HTTP ports needed** - Uses standard DNS (port 53)
+- **TTL-based polling** - Configurable refresh rate
+- **TTP Protocol** - Time-To-Propagate for eventual consistency
+- **Encrypted payloads** - Base64 + SCXQ2 encoding
+
 ## Architecture
 
 ```
-PHP Broker API (task queue)
-        ↓
-Python Agent (bridge)
-        ↓
-AI Code Agent (Claude/Codex/Aider/Ollama)
-        ↓
-MX2LM CLI (host orchestrator)
-        ↓
-KUHUL π (intent physics)
+┌─────────────────────────────────────────────────────────────┐
+│                      MATRIX v2.1                             │
+│                                                              │
+│  ┌──────────────────┐    ┌──────────────────────────────┐  │
+│  │  KUHUL GLYPH     │    │     Brain-Mesh Orchestrator   │  │
+│  │  Studio PWA      │───▶│  (Epsilon-Greedy Selection)   │  │
+│  │  (Terminal +     │    │                               │  │
+│  │   Editor)        │    │  ┌─────┐ ┌─────┐ ┌─────────┐ │  │
+│  └──────────────────┘    │  │Claude│ │GPT-4│ │ Ollama  │ │  │
+│                          │  └──┬──┘ └──┬──┘ └────┬────┘ │  │
+│  ┌──────────────────┐    │     └───────┼─────────┘      │  │
+│  │  Matrix CLI      │    │             ▼                │  │
+│  │  (DNS Tunnel)    │───▶│     LLMProvider.php         │  │
+│  └──────────────────┘    └──────────────────────────────┘  │
+│           │                            │                    │
+│           ▼                            ▼                    │
+│  ┌──────────────────┐    ┌──────────────────────────────┐  │
+│  │ MX2LM Server     │    │ Python Agent                 │  │
+│  │ (Node.js)        │    │ (AI Bridge)                  │  │
+│  └──────────────────┘    └──────────────────────────────┘  │
+│           │                            │                    │
+│           └────────────┬───────────────┘                    │
+│                        ▼                                    │
+│           ┌──────────────────────────────┐                 │
+│           │ CM-1 Protocol                │                 │
+│           │ (Phase Control)              │                 │
+│           └──────────────────────────────┘                 │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-| Layer          | Role              |
-|----------------|-------------------|
-| PHP Broker     | Task distribution |
-| Python Agent   | AI bridge         |
-| AI Agent       | Code execution    |
-| MX2LM CLI      | Host control      |
-| KUHUL          | Physics engine    |
+| Layer          | Role                    |
+|----------------|-------------------------|
+| KUHUL Studio   | Web terminal + editor   |
+| Matrix CLI     | DNS-based CLI access    |
+| Brain-Mesh     | Adaptive LLM routing    |
+| MX2LM Server   | Node.js runtime         |
+| Python Agent   | AI bridge               |
+| CM-1 Protocol  | Phase control           |
 
 ## Examples
 
