@@ -370,6 +370,152 @@ const commands = {
     },
 
     // ─────────────────────────────────────────────────────────────────────────
+    // RIG FEDERATION
+    // ─────────────────────────────────────────────────────────────────────────
+    rig: {
+        description: 'RIG federation - share local models via DNS',
+        async run(args, config) {
+            const { RigManager } = require('./rig-manager');
+            const rig = new RigManager(config);
+
+            switch (args.subcommand) {
+                case 'register':
+                    const name = args.flags.name || `rig-${Date.now().toString(36)}`;
+                    console.log(`Registering rig "${name}"...`);
+                    const regResult = await rig.register(name);
+                    if (regResult.success) {
+                        console.log('✓ Rig registered');
+                        console.log(`  ID: ${regResult.rigId}`);
+                        console.log(`  Models: ${regResult.models?.join(', ') || 'none detected'}`);
+                    } else {
+                        console.error('✗ Registration failed:', regResult.error);
+                    }
+                    break;
+
+                case 'unregister':
+                    console.log('Unregistering rig...');
+                    const unregResult = await rig.unregister();
+                    if (unregResult.success) {
+                        console.log('✓ Rig unregistered');
+                    } else {
+                        console.error('✗ Unregister failed:', unregResult.error);
+                    }
+                    break;
+
+                case 'advertise':
+                    console.log('Advertising models...');
+                    const advResult = await rig.advertise();
+                    if (advResult.success) {
+                        console.log('✓ Models advertised');
+                        console.log(`  Models: ${advResult.models?.join(', ') || 'none'}`);
+                    } else {
+                        console.error('✗ Advertise failed:', advResult.error);
+                    }
+                    break;
+
+                case 'serve':
+                    const interval = parseInt(args.flags.interval) || 5000;
+                    console.log(`Starting rig server (poll interval: ${interval}ms)...`);
+                    console.log('Press Ctrl+C to stop\n');
+                    await rig.serve(interval);
+                    break;
+
+                case 'status':
+                    const status = await rig.status();
+                    console.log('RIG Status');
+                    console.log('─'.repeat(40));
+                    console.log(`  ID: ${status.rigId || 'not registered'}`);
+                    console.log(`  Name: ${status.name || 'unknown'}`);
+                    console.log(`  Registered: ${status.registered ? 'yes' : 'no'}`);
+                    console.log(`  Models: ${status.models?.join(', ') || 'none'}`);
+                    if (status.capabilities) {
+                        console.log(`  Platform: ${status.capabilities.platform}`);
+                        if (status.capabilities.gpu) {
+                            console.log(`  GPU: ${status.capabilities.gpu}`);
+                        }
+                    }
+                    break;
+
+                case 'list':
+                    console.log('Fetching federated rigs...');
+                    const list = await httpRequest(config, '/api/brain-mesh/rig-router.php?action=list');
+                    if (list.success) {
+                        console.log(`\nFederated Rigs (${list.online}/${list.total} online)\n`);
+                        console.log('─'.repeat(60));
+                        for (const r of list.rigs) {
+                            const statusIcon = r.status === 'online' ? '●' : '○';
+                            console.log(`${statusIcon} ${r.name} (${r.id})`);
+                            console.log(`    Models: ${r.models?.join(', ') || 'none'}`);
+                            console.log(`    Score: ${(r.score * 100).toFixed(1)}% | Latency: ${r.avg_latency_ms}ms`);
+                            console.log(`    Requests: ${r.successful_requests}/${r.total_requests}`);
+                        }
+                    } else {
+                        console.error('✗ Failed to list rigs:', list.error);
+                    }
+                    break;
+
+                case 'request':
+                    const model = args.flags.model || args.positional[0];
+                    const prompt = args.positional.slice(model === args.positional[0] ? 1 : 0).join(' ');
+                    if (!model || !prompt) {
+                        console.error('Usage: matrix-cli rig request --model=<model> <prompt>');
+                        return;
+                    }
+                    console.log(`Queuing request to rig (model: ${model})...`);
+                    const reqResult = await httpRequest(config, '/api/brain-mesh/rig-router.php?action=request', {
+                        method: 'POST',
+                        body: JSON.stringify({ model, prompt }),
+                    });
+                    if (reqResult.success) {
+                        console.log(`✓ Request queued (ID: ${reqResult.requestId}, Rig: ${reqResult.rigId})`);
+                        console.log('Waiting for response...');
+                        const waitResult = await httpRequest(config, `/api/brain-mesh/rig-router.php?action=wait&requestId=${reqResult.requestId}&timeout=60`);
+                        if (waitResult.success) {
+                            console.log(`\n${waitResult.response}`);
+                            console.log(`\n[Latency: ${waitResult.latency}ms]`);
+                        } else {
+                            console.error('✗ Request failed:', waitResult.error);
+                        }
+                    } else {
+                        console.error('✗ Queue failed:', reqResult.error);
+                    }
+                    break;
+
+                default:
+                    console.log(`
+RIG Federation - Share local Ollama models via DNS
+
+USAGE:
+  matrix-cli rig <command> [options]
+
+COMMANDS:
+  register      Register this machine as a rig
+  unregister    Remove this rig from federation
+  advertise     Update available models
+  serve         Start serving requests (poll mode)
+  status        Show local rig status
+  list          List all federated rigs
+  request       Send inference request to a rig
+
+OPTIONS:
+  --name=<name>       Rig name (for register)
+  --interval=<ms>     Poll interval (for serve, default: 5000)
+  --model=<model>     Model to use (for request)
+
+EXAMPLES:
+  matrix-cli rig register --name=home-gpu
+  matrix-cli rig serve --interval=3000
+  matrix-cli rig list
+  matrix-cli rig request --model=llama3.2 "Hello world"
+
+This enables local machines to share Ollama models with the
+Brain-Mesh federation without HTTP port forwarding.
+`);
+            }
+        }
+    },
+
+    // ─────────────────────────────────────────────────────────────────────────
     // HELP
     // ─────────────────────────────────────────────────────────────────────────
     help: {
@@ -391,6 +537,7 @@ COMMANDS:
   terminal           Execute terminal command
   llm                LLM provider management
   kuhul              K'UHUL glyph execution
+  rig                RIG federation (share local models)
   help               Show this help
   version            Show version
 
@@ -405,6 +552,8 @@ EXAMPLES:
   matrix-cli terminal "brain-mesh health"
   matrix-cli tunnel start --ttl=60
   matrix-cli kuhul exec "⟁Sek⟁ brain-mesh stats"
+  matrix-cli rig register --name=home-gpu
+  matrix-cli rig serve
 
 DNS-BASED COMMUNICATION:
   Matrix CLI can communicate via DNS TXT records, avoiding
