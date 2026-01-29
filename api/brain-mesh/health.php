@@ -8,8 +8,7 @@
  */
 
 header("Content-Type: application/json");
-require __DIR__ . '/../guard.php';
-require __DIR__ . '/../db.php';
+require __DIR__ . '/db.php';
 require __DIR__ . '/BrainMesh.php';
 
 // Health endpoint doesn't require auth (for monitoring)
