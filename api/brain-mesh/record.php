@@ -11,12 +11,8 @@
  */
 
 header("Content-Type: application/json");
-require __DIR__ . '/../guard.php';
-require __DIR__ . '/../db.php';
-require __DIR__ . '/../auth.php';
+require __DIR__ . '/db.php';
 require __DIR__ . '/BrainMesh.php';
-
-require_api_key();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

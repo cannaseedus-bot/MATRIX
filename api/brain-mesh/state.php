@@ -10,12 +10,8 @@
  */
 
 header("Content-Type: application/json");
-require __DIR__ . '/../guard.php';
-require __DIR__ . '/../db.php';
-require __DIR__ . '/../auth.php';
+require __DIR__ . '/db.php';
 require __DIR__ . '/BrainMesh.php';
-
-require_api_key();
 
 $brainMesh = new BrainMesh($pdo);
 
