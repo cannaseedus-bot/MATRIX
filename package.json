@@ -16,6 +16,7 @@
     "stylesheet"
   ],
   "dependencies": {
+    "@posthog/code-agent": "^0.2.0",
     "kuhul-es": "^1.0.18"
   }
 }
