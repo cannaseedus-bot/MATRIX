@@ -335,6 +335,63 @@ $COMMAND_REGISTRY = [
             ],
         ],
     ],
+
+    // ═══════════════════════════════════════════════════════════════════
+    // K'UHUL COMMANDS
+    // ═══════════════════════════════════════════════════════════════════
+    'kuhul' => [
+        'description' => 'K\'UHUL glyph execution and management',
+        'commands' => [
+            'exec' => [
+                'description' => 'Execute K\'UHUL glyph code',
+                'usage' => 'kuhul exec "<glyph_code>"',
+                'handler' => 'handleKuhulExec',
+            ],
+            'parse' => [
+                'description' => 'Parse K\'UHUL code to AST',
+                'usage' => 'kuhul parse "<code>" | kuhul parse --file=<path>',
+                'handler' => 'handleKuhulParse',
+            ],
+            'glyphs' => [
+                'description' => 'List available glyphs',
+                'usage' => 'kuhul glyphs [--category=<cat>]',
+                'handler' => 'handleKuhulGlyphs',
+            ],
+            'status' => [
+                'description' => 'K\'UHUL kernel status',
+                'usage' => 'kuhul status',
+                'handler' => 'handleKuhulStatus',
+            ],
+            'echo' => [
+                'description' => 'Echo output (for glyph transforms)',
+                'usage' => 'kuhul echo "<message>"',
+                'handler' => 'handleKuhulEcho',
+            ],
+            'variables' => [
+                'description' => 'List session variables',
+                'usage' => 'kuhul variables',
+                'handler' => 'handleKuhulVariables',
+            ],
+        ],
+        'admin_only' => [
+            'boot' => [
+                'description' => 'Boot K\'UHUL kernel',
+                'usage' => 'kuhul boot [--config=<file>]',
+                'handler' => 'handleKuhulBoot',
+            ],
+            'admin' => [
+                'description' => 'Execute admin glyph (⟁Ajaw⟁)',
+                'usage' => 'kuhul admin "<command>"',
+                'handler' => 'handleKuhulAdmin',
+            ],
+            'divine' => [
+                'description' => 'Execute divine glyph (⟁K\'uhul⟁)',
+                'usage' => 'kuhul divine "<operation>"',
+                'handler' => 'handleKuhulDivine',
+                'dangerous' => true,
+            ],
+        ],
+    ],
 ];
 
 /**
