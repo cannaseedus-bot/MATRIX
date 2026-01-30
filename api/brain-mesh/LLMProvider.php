@@ -122,8 +122,14 @@ class LLMProvider {
 
     /**
      * Resolve model ID to provider info
+     * Supports model@rig-id syntax for rig routing
      */
     public function resolveModel(string $modelId): ?array {
+        // Check for model@rig-id syntax
+        if (str_contains($modelId, '@')) {
+            return $this->resolveRigModel($modelId);
+        }
+
         // Check cloud providers
         foreach (['anthropic', 'openai', 'google', 'mistral', 'groq', 'together', 'deepseek', 'xai', 'cohere'] as $provider) {
             if (isset($this->config['llm'][$provider]['models'][$modelId])) {
@@ -167,6 +173,68 @@ class LLMProvider {
                     $this->config['gguf']['server']['port']
                 ),
             ];
+        }
+
+        // Check if model exists on any online rig
+        return $this->resolveRigModelAuto($modelId);
+    }
+
+    /**
+     * Resolve model@rig-id syntax
+     */
+    private function resolveRigModel(string $modelSpec): ?array {
+        [$model, $rigId] = explode('@', $modelSpec, 2);
+
+        // Normalize rig ID
+        if (!str_starts_with($rigId, 'rig-')) {
+            $rigId = 'rig-' . $rigId;
+        }
+
+        return [
+            'provider' => 'rig',
+            'type' => 'federated',
+            'model' => $model,
+            'rig_id' => $rigId,
+            'config' => [
+                'context_window' => 4096,
+                'max_tokens' => 4096,
+            ],
+        ];
+    }
+
+    /**
+     * Auto-resolve model to best available rig
+     */
+    private function resolveRigModelAuto(string $model): ?array {
+        if (!$this->pdo) {
+            return null;
+        }
+
+        try {
+            // Find online rig with this model
+            $stmt = $this->pdo->prepare(
+                "SELECT id, name, score FROM rigs
+                 WHERE status = 'online' AND JSON_CONTAINS(models, ?)
+                 ORDER BY score DESC LIMIT 1"
+            );
+            $stmt->execute([json_encode($model)]);
+            $rig = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($rig) {
+                return [
+                    'provider' => 'rig',
+                    'type' => 'federated',
+                    'model' => $model,
+                    'rig_id' => $rig['id'],
+                    'rig_name' => $rig['name'],
+                    'config' => [
+                        'context_window' => 4096,
+                        'max_tokens' => 4096,
+                    ],
+                ];
+            }
+        } catch (PDOException $e) {
+            // Rigs table might not exist
         }
 
         return null;
@@ -273,6 +341,7 @@ class LLMProvider {
                 'cohere' => $this->chatCohere($resolved, $messages, $options),
                 'ollama' => $this->chatOllama($resolved, $messages, $options),
                 'gguf' => $this->chatGGUF($resolved, $messages, $options),
+                'rig' => $this->chatRig($resolved, $messages, $options),
                 default => ['error' => 'Unknown provider: ' . $resolved['provider'], 'success' => false],
             };
 
@@ -546,6 +615,99 @@ class LLMProvider {
             ],
             'stop_reason' => $response['choices'][0]['finish_reason'] ?? null,
         ];
+    }
+
+    /**
+     * Federated RIG via rig-router.php
+     * Routes request to a remote rig running Ollama
+     */
+    private function chatRig(array $resolved, array $messages, array $options): array {
+        $rigId = $resolved['rig_id'];
+        $model = $resolved['model'];
+
+        // Build prompt from messages
+        $prompt = '';
+        foreach ($messages as $msg) {
+            $role = $msg['role'];
+            $content = $msg['content'];
+            if ($role === 'system') {
+                $prompt .= "[System]\n$content\n\n";
+            } elseif ($role === 'user') {
+                $prompt .= "[User]\n$content\n\n";
+            } elseif ($role === 'assistant') {
+                $prompt .= "[Assistant]\n$content\n\n";
+            }
+        }
+
+        // Queue request via rig-router
+        $rigRouterUrl = $this->getRigRouterUrl();
+
+        $queueResponse = $this->httpPost(
+            $rigRouterUrl . '?action=request',
+            [
+                'model' => $model,
+                'prompt' => trim($prompt),
+                'rigId' => $rigId,
+                'options' => $options,
+            ],
+            ['Content-Type: application/json']
+        );
+
+        if (!($queueResponse['success'] ?? false)) {
+            return [
+                'error' => $queueResponse['error'] ?? 'Failed to queue rig request',
+                'success' => false,
+            ];
+        }
+
+        $requestId = $queueResponse['requestId'];
+        $actualRigId = $queueResponse['rigId'];
+
+        // Wait for response (long-poll)
+        $timeout = $options['timeout'] ?? 60;
+        $waitResponse = $this->httpPost(
+            $rigRouterUrl . "?action=wait&requestId=$requestId&timeout=$timeout",
+            [],
+            ['Content-Type: application/json'],
+            $timeout + 5
+        );
+
+        if (!($waitResponse['success'] ?? false)) {
+            return [
+                'error' => $waitResponse['error'] ?? 'Rig request timed out',
+                'success' => false,
+                'rig_id' => $actualRigId,
+                'request_id' => $requestId,
+            ];
+        }
+
+        return [
+            'success' => true,
+            'content' => $waitResponse['response'] ?? '',
+            'usage' => [
+                'input_tokens' => 0, // Rigs don't report token usage yet
+                'output_tokens' => 0,
+            ],
+            'stop_reason' => 'stop',
+            'rig_id' => $actualRigId,
+            'rig_latency' => $waitResponse['latency'] ?? 0,
+        ];
+    }
+
+    /**
+     * Get rig router URL
+     */
+    private function getRigRouterUrl(): string {
+        // Try config first
+        if (isset($this->config['rig']['router_url'])) {
+            return $this->config['rig']['router_url'];
+        }
+
+        // Default to same server
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+        return "$protocol://$host/api/brain-mesh/rig-router.php";
     }
 
     /**

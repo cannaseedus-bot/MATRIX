@@ -307,16 +307,17 @@ class BrainMesh {
     }
 
     /**
-     * Get brain leaderboard
+     * Get brain leaderboard (unified: brains + rigs)
      */
-    public function getLeaderboard(?string $domain = null): array {
+    public function getLeaderboard(?string $domain = null, bool $includeRigs = true): array {
         $sql = "SELECT
                     b.id, b.label, b.type,
                     COALESCE(bs.score, 0.5) as score,
                     COALESCE(bs.success_rate, 0.5) as success_rate,
                     COALESCE(bs.tier, 'standard') as tier,
                     COALESCE(bs.total_executions, 0) as total_executions,
-                    COALESCE(bs.avg_latency_ms, 0) as avg_latency_ms
+                    COALESCE(bs.avg_latency_ms, 0) as avg_latency_ms,
+                    0 as is_rig
                 FROM brains b
                 LEFT JOIN brain_scores bs ON b.id = bs.brain_id";
 
@@ -326,28 +327,215 @@ class BrainMesh {
             $params[] = $domain;
         }
 
-        $sql .= " ORDER BY COALESCE(bs.score, 0.5) DESC";
-
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
-        $brains = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Include rigs in leaderboard
+        if ($includeRigs) {
+            try {
+                $rigSql = "SELECT
+                            id, name as label, 'rig' as type,
+                            score,
+                            CASE WHEN total_requests > 0
+                                THEN successful_requests / total_requests
+                                ELSE 0.5 END as success_rate,
+                            CASE
+                                WHEN score >= ? THEN 'promoted'
+                                WHEN score <= ? THEN 'demoted'
+                                ELSE 'standard' END as tier,
+                            total_requests as total_executions,
+                            avg_latency_ms,
+                            1 as is_rig,
+                            status,
+                            models
+                        FROM rigs
+                        WHERE status != 'offline' OR last_seen > DATE_SUB(NOW(), INTERVAL 1 HOUR)";
+
+                $rigStmt = $this->pdo->prepare($rigSql);
+                $rigStmt->execute([$this->promotionThreshold, $this->demotionThreshold]);
+                $rigs = $rigStmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Decode models JSON for rigs
+                foreach ($rigs as &$rig) {
+                    $rig['models'] = json_decode($rig['models'], true) ?? [];
+                    $rig['score'] = (float) $rig['score'];
+                }
+
+                $entries = array_merge($entries, $rigs);
+            } catch (PDOException $e) {
+                // Rigs table might not exist yet, continue without
+            }
+        }
+
+        // Sort by score descending
+        usort($entries, fn($a, $b) => (float)$b['score'] <=> (float)$a['score']);
 
         // Add rank
         $rank = 1;
-        foreach ($brains as &$brain) {
-            $brain['rank'] = $rank++;
+        foreach ($entries as &$entry) {
+            $entry['rank'] = $rank++;
+            $entry['is_rig'] = (bool) ($entry['is_rig'] ?? false);
         }
 
-        return $brains;
+        return $entries;
     }
 
     /**
-     * Get brain by ID
+     * Get brain by ID (includes rigs with rig- prefix)
      */
     public function getBrain(string $id): ?array {
+        // Check if it's a rig
+        if (str_starts_with($id, 'rig-') || str_starts_with($id, 'rig:')) {
+            return $this->getRig($id);
+        }
+
         $stmt = $this->pdo->prepare("SELECT * FROM brains WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    /**
+     * Get rig by ID
+     */
+    public function getRig(string $rigId): ?array {
+        // Normalize ID (rig:xxx -> rig-xxx)
+        $rigId = str_replace('rig:', 'rig-', $rigId);
+
+        try {
+            $stmt = $this->pdo->prepare(
+                "SELECT id, name, models, capabilities, status, score,
+                        total_requests, successful_requests, avg_latency_ms,
+                        last_seen, created_at
+                 FROM rigs WHERE id = ?"
+            );
+            $stmt->execute([$rigId]);
+            $rig = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$rig) {
+                return null;
+            }
+
+            // Format as brain-compatible structure
+            return [
+                'id' => $rig['id'],
+                'label' => $rig['name'],
+                'type' => 'rig',
+                'models' => json_decode($rig['models'], true) ?? [],
+                'capabilities' => json_decode($rig['capabilities'], true) ?? [],
+                'status' => $rig['status'],
+                'score' => (float) $rig['score'],
+                'tier' => $this->rigScoreToTier((float) $rig['score']),
+                'total_executions' => $rig['total_requests'],
+                'success_rate' => $rig['total_requests'] > 0
+                    ? $rig['successful_requests'] / $rig['total_requests']
+                    : 0.5,
+                'avg_latency_ms' => $rig['avg_latency_ms'],
+                'last_seen' => $rig['last_seen'],
+                'is_rig' => true,
+            ];
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Convert rig score to tier
+     */
+    private function rigScoreToTier(float $score): string {
+        if ($score >= $this->promotionThreshold) {
+            return 'promoted';
+        } elseif ($score <= $this->demotionThreshold) {
+            return 'demoted';
+        }
+        return 'standard';
+    }
+
+    /**
+     * Get all online rigs
+     */
+    public function getOnlineRigs(): array {
+        try {
+            // Mark stale rigs as offline
+            $this->pdo->exec(
+                "UPDATE rigs SET status = 'offline'
+                 WHERE status = 'online' AND last_seen < DATE_SUB(NOW(), INTERVAL 2 MINUTE)"
+            );
+
+            $stmt = $this->pdo->query(
+                "SELECT id, name, models, capabilities, status, score,
+                        total_requests, successful_requests, avg_latency_ms,
+                        last_seen
+                 FROM rigs
+                 WHERE status = 'online'
+                 ORDER BY score DESC"
+            );
+
+            $rigs = [];
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $rig) {
+                $rigs[] = [
+                    'id' => $rig['id'],
+                    'label' => $rig['name'],
+                    'type' => 'rig',
+                    'models' => json_decode($rig['models'], true) ?? [],
+                    'capabilities' => json_decode($rig['capabilities'], true) ?? [],
+                    'status' => $rig['status'],
+                    'score' => (float) $rig['score'],
+                    'tier' => $this->rigScoreToTier((float) $rig['score']),
+                    'total_executions' => $rig['total_requests'],
+                    'success_rate' => $rig['total_requests'] > 0
+                        ? $rig['successful_requests'] / $rig['total_requests']
+                        : 0.5,
+                    'avg_latency_ms' => $rig['avg_latency_ms'],
+                    'is_rig' => true,
+                ];
+            }
+
+            return $rigs;
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Find rigs that have a specific model
+     */
+    public function findRigsWithModel(string $model): array {
+        try {
+            $stmt = $this->pdo->prepare(
+                "SELECT id, name, models, score, status, avg_latency_ms
+                 FROM rigs
+                 WHERE status = 'online' AND JSON_CONTAINS(models, ?)
+                 ORDER BY score DESC"
+            );
+            $stmt->execute([json_encode($model)]);
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Select best rig for a model (epsilon-greedy)
+     */
+    public function selectRigForModel(string $model): ?array {
+        $rigs = $this->findRigsWithModel($model);
+
+        if (empty($rigs)) {
+            return null;
+        }
+
+        // Epsilon-greedy selection
+        if (mt_rand() / mt_getrandmax() < $this->explorationRate) {
+            // Explore: random selection
+            $rig = $rigs[array_rand($rigs)];
+        } else {
+            // Exploit: select best scoring rig
+            $rig = $rigs[0]; // Already sorted by score DESC
+        }
+
+        return $this->getRig($rig['id']);
     }
 
     /**
