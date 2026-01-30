@@ -17,6 +17,7 @@
 - **Brain-Mesh Orchestrator** - Adaptive multi-LLM routing with epsilon-greedy selection
 - **KUHUL GLYPH Studio** - Terminal projection PWA with code editor
 - **Matrix CLI** - Command-line interface with DNS-based tunneling
+- **RIG Federation** - Share local Ollama models without port forwarding
 - **Micronaut CSS** - CSS-variable-driven UI monitoring system
 - **CM-1 Protocol** - Control character layer for phase management
 
@@ -122,6 +123,8 @@ MATRIX/
 │   │   ├── BrainMesh.php    # Adaptive routing engine
 │   │   ├── LLMProvider.php  # Multi-LLM provider class
 │   │   ├── terminal.php     # Terminal projection API
+│   │   ├── rig-router.php   # RIG federation router (NEW)
+│   │   ├── schema-rigs.sql  # RIG database schema (NEW)
 │   │   ├── command-registry.php # Command allowlist
 │   │   ├── config.example.php # Configuration template
 │   │   └── db.php           # Database connection
@@ -133,7 +136,7 @@ MATRIX/
 │   └── matrix-cli/         # Matrix CLI
 │       ├── index.js         # Main entry point
 │       ├── dns-tunnel.js    # DNS-based communication
-│       ├── commands/        # CLI command modules
+│       ├── rig-manager.js   # RIG federation client (NEW)
 │       └── package.json     # Dependencies
 │
 ├── agent/                  # Python Agent (AI Bridge)
@@ -430,47 +433,145 @@ Matrix CLI uses DNS TXT records for communication, avoiding HTTP firewall issues
 - **TTP Protocol** - Time-To-Propagate for eventual consistency
 - **Encrypted payloads** - Base64 + SCXQ2 encoding
 
+## RIG Federation
+
+Share local Ollama models with the Brain-Mesh federation without HTTP port forwarding.
+
+### The Paradigm Shift
+
+Traditional approach requires:
+- Opening firewall ports
+- Setting up reverse proxies
+- Exposing local services to internet
+
+RIG Federation uses DNS-based communication:
+- No HTTP ports needed
+- PHP server routes requests
+- Local rigs poll for work
+- Responses flow back through DNS
+
+```
+┌─────────────────┐                    ┌─────────────────┐
+│   Your Machine  │                    │  Brain-Mesh     │
+│   (RIG)         │                    │  (PHP Server)   │
+│                 │                    │                 │
+│  ┌───────────┐  │   DNS/HTTP Poll    │  ┌───────────┐  │
+│  │  Ollama   │  │ ◀───────────────── │  │rig-router │  │
+│  │  Models   │  │                    │  │   .php    │  │
+│  └───────────┘  │ ─────────────────▶ │  └───────────┘  │
+│                 │   Response         │                 │
+└─────────────────┘                    └─────────────────┘
+```
+
+### Setup a RIG
+
+```bash
+# Install Matrix CLI
+cd bin/matrix-cli && npm install
+
+# Register your machine as a rig
+matrix-cli rig register --name=home-gpu
+
+# Start serving requests
+matrix-cli rig serve --interval=5000
+```
+
+### RIG Commands
+
+```bash
+# Register/manage rig
+matrix-cli rig register --name=<name>
+matrix-cli rig unregister
+matrix-cli rig advertise
+matrix-cli rig status
+
+# Serve inference requests
+matrix-cli rig serve --interval=3000
+
+# List all federated rigs
+matrix-cli rig list
+
+# Send request to specific rig
+matrix-cli rig request --model=llama3.2 "Hello world"
+```
+
+### Using RIGs from Code
+
+```php
+// Direct rig targeting with model@rig-id syntax
+$llm = new LLMProvider($config, $pdo);
+$response = $llm->chat('llama3.2@home-gpu', $messages);
+
+// Auto-select best rig with model
+$response = $llm->chat('llama3.2', $messages);
+// Routes to online rig if no local config
+
+// Unified leaderboard (brains + rigs)
+$mesh = new BrainMesh($pdo, $config);
+$leaderboard = $mesh->getLeaderboard();
+// Shows cloud providers and local rigs ranked by score
+```
+
+### RIG API Endpoints
+
+| Endpoint | Action | Description |
+|----------|--------|-------------|
+| `rig-router.php?action=register` | POST | Register a rig |
+| `rig-router.php?action=poll` | POST | Get pending requests |
+| `rig-router.php?action=respond` | POST | Submit response |
+| `rig-router.php?action=list` | GET | List all rigs |
+| `rig-router.php?action=request` | POST | Queue inference request |
+| `rig-router.php?action=wait` | GET | Wait for response |
+
+### Use Cases
+
+- **Home GPU** - Share your RTX 4090 with team without VPN
+- **Corporate Network** - GPU behind firewall, no IT tickets needed
+- **Edge Devices** - Raspberry Pi inference nodes
+- **Distributed Inference** - Mesh of local models across locations
+
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      MATRIX v2.1                             │
-│                                                              │
-│  ┌──────────────────┐    ┌──────────────────────────────┐  │
-│  │  KUHUL GLYPH     │    │     Brain-Mesh Orchestrator   │  │
-│  │  Studio PWA      │───▶│  (Epsilon-Greedy Selection)   │  │
-│  │  (Terminal +     │    │                               │  │
-│  │   Editor)        │    │  ┌─────┐ ┌─────┐ ┌─────────┐ │  │
-│  └──────────────────┘    │  │Claude│ │GPT-4│ │ Ollama  │ │  │
-│                          │  └──┬──┘ └──┬──┘ └────┬────┘ │  │
-│  ┌──────────────────┐    │     └───────┼─────────┘      │  │
-│  │  Matrix CLI      │    │             ▼                │  │
-│  │  (DNS Tunnel)    │───▶│     LLMProvider.php         │  │
-│  └──────────────────┘    └──────────────────────────────┘  │
-│           │                            │                    │
-│           ▼                            ▼                    │
-│  ┌──────────────────┐    ┌──────────────────────────────┐  │
-│  │ MX2LM Server     │    │ Python Agent                 │  │
-│  │ (Node.js)        │    │ (AI Bridge)                  │  │
-│  └──────────────────┘    └──────────────────────────────┘  │
-│           │                            │                    │
-│           └────────────┬───────────────┘                    │
-│                        ▼                                    │
-│           ┌──────────────────────────────┐                 │
-│           │ CM-1 Protocol                │                 │
-│           │ (Phase Control)              │                 │
-│           └──────────────────────────────┘                 │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                          MATRIX v2.1                                 │
+│                                                                      │
+│  ┌──────────────────┐    ┌────────────────────────────────────┐    │
+│  │  KUHUL GLYPH     │    │       Brain-Mesh Orchestrator       │    │
+│  │  Studio PWA      │───▶│    (Epsilon-Greedy Selection)       │    │
+│  │  (Terminal +     │    │                                     │    │
+│  │   Editor)        │    │  ┌─────┐ ┌─────┐ ┌───────┐ ┌─────┐ │    │
+│  └──────────────────┘    │  │Claude│ │GPT-4│ │Ollama │ │ RIG │ │    │
+│                          │  └──┬──┘ └──┬──┘ └───┬───┘ └──┬──┘ │    │
+│  ┌──────────────────┐    │     └───────┼────────┼────────┘    │    │
+│  │  Matrix CLI      │    │             ▼        ▼             │    │
+│  │  (DNS Tunnel)    │───▶│     LLMProvider.php + RIG Router   │    │
+│  └──────────────────┘    └────────────────────────────────────┘    │
+│           │                            │                            │
+│           ▼                            ▼                            │
+│  ┌──────────────────┐    ┌──────────────────┐  ┌────────────────┐  │
+│  │ MX2LM Server     │    │ Python Agent     │  │ Federated RIGs │  │
+│  │ (Node.js)        │    │ (AI Bridge)      │  │ (Local Ollama) │  │
+│  └──────────────────┘    └──────────────────┘  └────────────────┘  │
+│           │                            │               │            │
+│           └────────────┬───────────────┴───────────────┘            │
+│                        ▼                                            │
+│           ┌──────────────────────────────┐                         │
+│           │ CM-1 Protocol                │                         │
+│           │ (Phase Control)              │                         │
+│           └──────────────────────────────┘                         │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-| Layer          | Role                    |
-|----------------|-------------------------|
-| KUHUL Studio   | Web terminal + editor   |
-| Matrix CLI     | DNS-based CLI access    |
-| Brain-Mesh     | Adaptive LLM routing    |
-| MX2LM Server   | Node.js runtime         |
-| Python Agent   | AI bridge               |
-| CM-1 Protocol  | Phase control           |
+| Layer          | Role                              |
+|----------------|-----------------------------------|
+| KUHUL Studio   | Web terminal + editor             |
+| Matrix CLI     | DNS-based CLI access              |
+| Brain-Mesh     | Adaptive LLM routing              |
+| RIG Federation | Local model sharing via DNS       |
+| MX2LM Server   | Node.js runtime                   |
+| Python Agent   | AI bridge                         |
+| CM-1 Protocol  | Phase control                     |
 
 ## Examples
 
