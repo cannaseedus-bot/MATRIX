@@ -1,0 +1,17 @@
+{
+  "@context": "asx://schema/kuhul-tsg/v1",
+  "@spec": "KUHUL-TSG",
+  "@authority": "SCXQ7",
+  "@sealed": true,
+  "@note": "Projection schema for Micronaut semantic extraction",
+  "schema": {
+    "message": {
+      "id": "uuid",
+      "time": "unix_ms",
+      "role": ["user", "system", "micronaut"],
+      "intent": ["chat", "generate", "classify", "complete"],
+      "context": "string?",
+      "payload": "utf8"
+    }
+  }
+}

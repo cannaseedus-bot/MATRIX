@@ -165,8 +165,18 @@ MATRIX/
 │   ├── index.html          # Task runner interface
 │   └── sw.js               # Service worker
 │
+├── micronaut/              # SCO/1 Micronaut object server (NEW)
+│   ├── micronaut.s7         # Sealed executable object
+│   ├── object.toml          # Object server declaration
+│   ├── semantics.xjson      # KUHUL-TSG schema
+│   ├── brains/              # Sealed data
+│   ├── io/                  # Append-only IO
+│   ├── trace/               # Trace ledger
+│   └── proof/               # Proof ledger
+│
 ├── docs/                   # Documentation
 │   ├── ai-agents.md        # AI Agent integration
+│   ├── micronaut-object.md # Micronaut object server spec
 │   ├── mx2lm-cli.md        # Server specification
 │   └── mxs.md              # MXS specification
 │
