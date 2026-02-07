@@ -1,0 +1,3 @@
+SCXQ2::trace
+@sealed=true
+@note=Append-only trace for Micronaut projection

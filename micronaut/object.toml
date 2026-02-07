@@ -1,0 +1,19 @@
+[object]
+name = "micronaut"
+class = "SCO/1"
+version = "scxq7"
+authority = "scxq7"
+sealed = true
+root = "."
+
+[io]
+chat = "io/chat.txt"
+stream = "io/stream.txt"
+snapshot_dir = "io/snapshot"
+
+[trace]
+trace = "trace/scxq2.trace"
+proof = "proof/scxq2.proof"
+
+[lifecycle]
+states = ["INIT", "READY", "RUNNING", "IDLE", "HALT"]
